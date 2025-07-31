@@ -15,7 +15,7 @@ import {
   Text,
   Flex,
 } from "@chakra-ui/react";
-import { ArrowUpIcon, ArrowDownIcon } from "@chakra-ui/icons";
+import { ArrowUpIcon, ArrowDownIcon } from '@chakra-ui/icons';
 
 // Import dari @tanstack/react-table dan react-virtual
 import {
@@ -67,21 +67,26 @@ function useCell(
   };
 }
 
-const defaultColumn: Partial<ColumnDef<IDatasetRecord>> = {
-  cell: ({ getValue, row: { index }, column: { id }, table }) => {
-    const { value, setValue, onBlur } = useCell(getValue, index, id, table);
+// Perbaikan: Buat komponen React baru untuk sel yang dapat diedit
+function EditableCell({ getValue, row: { index }, column: { id }, table }: any) {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { value, setValue, onBlur } = useCell(getValue, index, id, table);
 
-    return (
-      <Input
-        value={value as string}
-        onChange={(e) => setValue(e.target.value)}
-        onBlur={onBlur}
-        variant="unstyled"
-        size="sm"
-        px={0}
-      />
-    );
-  },
+  return (
+    <Input
+      value={value as string}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={onBlur}
+      variant="unstyled"
+      size="sm"
+      px={0}
+    />
+  );
+}
+
+const defaultColumn: Partial<ColumnDef<IDatasetRecord>> = {
+  // Perbaikan: Gunakan komponen EditableCell di sini
+  cell: EditableCell,
 };
 
 interface TableProps {
@@ -178,14 +183,14 @@ export function Table(props: TableProps) {
       overflowX="auto"
       overflowY="auto"
       minH="100px"
-      maxH="200px"
+      maxH="220px"
       borderRadius="md"
       border="1px solid"
       borderColor="gray.200"
       position="relative"
     >
       <ChakraTable variant="simple" size="sm" width="full">
-        <Thead bg="gray.50">
+        <Thead bg="gray.50" position="sticky" top={0} zIndex={1}>
           {table.getHeaderGroups().map((headerGroup) => (
             <Tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
@@ -193,14 +198,14 @@ export function Table(props: TableProps) {
                   <Th
                     key={header.id}
                     colSpan={header.colSpan}
-                    px={2}
-                    py={2}
+                    px={2} py={2}
                     textTransform="capitalize"
                     borderBottom="2px solid"
                     borderRight="1px solid"
                     borderColor="gray.200"
-                    cursor={header.column.getCanSort() ? "pointer" : "default"}
+                    cursor={header.column.getCanSort() ? 'pointer' : 'default'}
                     onClick={header.column.getToggleSortingHandler()}
+                    userSelect="none"
                   >
                     <Flex alignItems="center" justifyContent="space-between">
                       {header.isPlaceholder ? null : (
@@ -239,8 +244,7 @@ export function Table(props: TableProps) {
                   return (
                     <Td
                       key={cell.id}
-                      px={2}
-                      py={1}
+                      px={2} py={1}
                       borderBottom="1px solid"
                       borderRight="1px solid"
                       borderColor="gray.100"
