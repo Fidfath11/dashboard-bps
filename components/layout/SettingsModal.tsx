@@ -1,3 +1,5 @@
+// D:\BPS_Dashboard\ai-data-dashboard\components\layout\SettingsModal.tsx
+
 import React from "react";
 import styles from "../../styles/Components.module.scss";
 import gtag from "../../lib/gtag";
@@ -78,7 +80,8 @@ export function SettingsModal(
           />
         </div>
         <div className={styles.settingsFooter}>
-          <Button outline onClick={handleCancel}>
+          {/* Perbaikan: Ganti 'outline' menjadi 'variant="outline"' */}
+          <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
           <Button onClick={handleSave}>Save</Button>
