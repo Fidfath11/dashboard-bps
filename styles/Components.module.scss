@@ -204,8 +204,6 @@
 }
 
 .textAreaInput {
-  // display: grid;
-  // grid-template-rows: auto 1fr;
   height: 100%;
   width: 100%;
 
@@ -241,11 +239,6 @@
 
     height: calc(100% - 60px);
     min-height: 30vh;
-    // position: absolute;
-    // left: 0;
-    // top: 40px;
-    // right: 0;
-    // bottom: 0;
   }
 }
 
@@ -393,10 +386,6 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   width: 100%;
-
-  // & > * {
-  //   margin-right: 12px;
-  // }
 }
 
 .performanceIndicator {

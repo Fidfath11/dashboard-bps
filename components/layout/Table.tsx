@@ -2,7 +2,6 @@
 
 import React from "react";
 
-// Impor komponen Chakra UI yang dibutuhkan
 import {
   Box,
   Table as ChakraTable,
@@ -14,10 +13,10 @@ import {
   Input,
   Text,
   Flex,
+  useColorMode,
 } from "@chakra-ui/react";
-import { ArrowUpIcon, ArrowDownIcon } from '@chakra-ui/icons';
+import { ArrowUpIcon, ArrowDownIcon } from "@chakra-ui/icons";
 
-// Import dari @tanstack/react-table dan react-virtual
 import {
   ColumnDef,
   useReactTable,
@@ -67,10 +66,21 @@ function useCell(
   };
 }
 
-// Perbaikan: Buat komponen React baru untuk sel yang dapat diedit
-function EditableCell({ getValue, row: { index }, column: { id }, table }: any) {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+function EditableCell({
+  getValue,
+  row: { index },
+  column: { id },
+  table,
+}: any) {
+  const { colorMode } = useColorMode();
   const { value, setValue, onBlur } = useCell(getValue, index, id, table);
+
+  // Styling adaptif untuk input di sel
+  const inputBg = colorMode === "light" ? "white" : "gray.700";
+  const inputColor = colorMode === "light" ? "gray.800" : "whiteAlpha.900";
+  const inputBorderColor = colorMode === "light" ? "gray.300" : "gray.600";
+  const hoverBorderColor = colorMode === "light" ? "gray.400" : "gray.500";
+  const focusBorderColor = colorMode === "light" ? "blue.500" : "blue.300";
 
   return (
     <Input
@@ -80,12 +90,16 @@ function EditableCell({ getValue, row: { index }, column: { id }, table }: any) 
       variant="unstyled"
       size="sm"
       px={0}
+      bg={inputBg}
+      color={inputColor}
+      borderColor={inputBorderColor}
+      _hover={{ borderColor: hoverBorderColor }}
+      _focus={{ borderColor: focusBorderColor, boxShadow: "outline" }}
     />
   );
 }
 
 const defaultColumn: Partial<ColumnDef<IDatasetRecord>> = {
-  // Perbaikan: Gunakan komponen EditableCell di sini
   cell: EditableCell,
 };
 
@@ -95,6 +109,7 @@ interface TableProps {
 }
 
 export function Table(props: TableProps) {
+  const { colorMode } = useColorMode();
   const tableContainerRef = React.useRef<HTMLDivElement>(null);
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -177,20 +192,33 @@ export function Table(props: TableProps) {
       ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0)
       : 0;
 
+  //  warna adaptif untuk tabel
+  const tableBg = colorMode === "light" ? "white" : "gray.800";
+  const tableBorderColor = colorMode === "light" ? "gray.200" : "gray.700";
+  const theadBg = colorMode === "light" ? "gray.50" : "gray.700";
+  const theadBorderColor = colorMode === "light" ? "gray.200" : "gray.600";
+  const textColor = colorMode === "light" ? "gray.800" : "whiteAlpha.900";
+  const rowHoverBg = colorMode === "light" ? "gray.100" : "whiteAlpha.100";
+  const cellBorderColor = colorMode === "light" ? "gray.100" : "gray.700";
+  const iconColor = colorMode === "light" ? "gray.600" : "whiteAlpha.800";
+
   return (
     <Box
       ref={tableContainerRef}
       overflowX="auto"
       overflowY="auto"
-      minH="100px"
-      maxH="220px"
+      minH="420px"
+      maxH="450px"
       borderRadius="md"
       border="1px solid"
-      borderColor="gray.200"
+      borderColor={tableBorderColor}
       position="relative"
+      bg={tableBg}
     >
       <ChakraTable variant="simple" size="sm" width="full">
-        <Thead bg="gray.50" position="sticky" top={0} zIndex={1}>
+        <Thead bg={theadBg} position="sticky" top={0} zIndex={1}>
+          {" "}
+          {/* Warna bg thead adaptif */}
           {table.getHeaderGroups().map((headerGroup) => (
             <Tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
@@ -198,14 +226,16 @@ export function Table(props: TableProps) {
                   <Th
                     key={header.id}
                     colSpan={header.colSpan}
-                    px={2} py={2}
+                    px={2}
+                    py={2}
                     textTransform="capitalize"
                     borderBottom="2px solid"
                     borderRight="1px solid"
-                    borderColor="gray.200"
-                    cursor={header.column.getCanSort() ? 'pointer' : 'default'}
+                    borderColor={theadBorderColor}
+                    cursor={header.column.getCanSort() ? "pointer" : "default"}
                     onClick={header.column.getToggleSortingHandler()}
                     userSelect="none"
+                    color={textColor}
                   >
                     <Flex alignItems="center" justifyContent="space-between">
                       {header.isPlaceholder ? null : (
@@ -217,8 +247,8 @@ export function Table(props: TableProps) {
                         </Text>
                       )}
                       {{
-                        asc: <ArrowUpIcon ml={2} />,
-                        desc: <ArrowDownIcon ml={2} />,
+                        asc: <ArrowUpIcon ml={2} color={iconColor} />,
+                        desc: <ArrowDownIcon ml={2} color={iconColor} />,
                       }[header.column.getIsSorted() as string] ?? null}
                     </Flex>
                   </Th>
@@ -239,15 +269,18 @@ export function Table(props: TableProps) {
           {virtualRows.map((virtualRow) => {
             const row = rows[virtualRow.index];
             return (
-              <Tr key={row.id} _hover={{ bg: "gray.100" }}>
+              <Tr key={row.id} _hover={{ bg: rowHoverBg }} color={textColor}>
+                {" "}
+                {/* Warna hover dan teks baris adaptif */}
                 {row.getVisibleCells().map((cell) => {
                   return (
                     <Td
                       key={cell.id}
-                      px={2} py={1}
+                      px={2}
+                      py={1}
                       borderBottom="1px solid"
                       borderRight="1px solid"
-                      borderColor="gray.100"
+                      borderColor={cellBorderColor}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,

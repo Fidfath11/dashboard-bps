@@ -1,7 +1,12 @@
 // D:\BPS_Dashboard\ai-data-dashboard\components\layout\TextAreaInput.tsx
 
 import React from "react";
-import { FormControl, FormLabel, Textarea } from "@chakra-ui/react";
+import {
+  FormControl,
+  FormLabel,
+  Textarea,
+  useColorMode,
+} from "@chakra-ui/react";
 import { ChangeEvent } from "react";
 
 interface TextAreaInputProps {
@@ -31,9 +36,11 @@ interface TextAreaInputProps {
   onBlur?: React.FocusEventHandler<HTMLTextAreaElement>;
   onFocus?: React.FocusEventHandler<HTMLTextAreaElement>;
   onCopy?: React.ClipboardEventHandler<HTMLTextAreaElement>;
+  flexGrow?: number;
 }
 
 export function TextAreaInput(props: TextAreaInputProps) {
+  const { colorMode } = useColorMode();
   const {
     label,
     value,
@@ -50,17 +57,19 @@ export function TextAreaInput(props: TextAreaInputProps) {
     h,
     minH,
     maxH,
-    borderColor,
-    _hover,
-    _focus,
-    borderRadius,
-    bg,
-    color,
+
+    borderColor: propBorderColor,
+    _hover: prop_hover,
+    _focus: prop_focus,
+    borderRadius: propBorderRadius,
+    bg: propBg,
+    color: propColor,
     placeholder,
     id,
     onBlur,
     onFocus,
     onCopy,
+    flexGrow,
     ...rest
   } = props;
 
@@ -93,8 +102,20 @@ export function TextAreaInput(props: TextAreaInputProps) {
     (e: ChangeEvent<HTMLTextAreaElement>) => {
       setInternalValue(e.target.value);
     },
-    [] // dependency array kosong karena tidak bergantung pada props
+    []
   );
+
+  // styling adaptif berdasarkan colorMode
+  const inputBg = colorMode === "light" ? "white" : "gray.700";
+  const inputColor = colorMode === "light" ? "gray.800" : "whiteAlpha.900";
+  const inputBorderColor = colorMode === "light" ? "gray.300" : "gray.600";
+  const hoverBorderColor = colorMode === "light" ? "gray.400" : "gray.500";
+  const focusBorderColor = colorMode === "light" ? "blue.500" : "blue.300";
+  const placeholderColor = colorMode === "light" ? "gray.500" : "gray.400";
+
+  // Teks placeholder default
+  const defaultPlaceholderText =
+    "Masukan pertanyaan atau instruksi analisis data disini...";
 
   return (
     <FormControl
@@ -109,24 +130,28 @@ export function TextAreaInput(props: TextAreaInputProps) {
       py={py}
       w={w}
       h={h}
+      flexGrow={flexGrow}
       {...rest}
     >
       {label && <FormLabel mb={1}>{label}</FormLabel>}
       <Textarea
-        value={internalValue} 
+        value={internalValue}
         onChange={handleChange}
         onBlur={onBlur}
         onFocus={onFocus}
         onCopy={onCopy}
         minH={minH || "60px"}
         maxH={maxH}
-        borderColor={borderColor || "gray.300"}
-        _hover={_hover || { borderColor: "gray.400" }}
-        _focus={_focus || { borderColor: "blue.500", boxShadow: "outline" }}
-        borderRadius={borderRadius || "md"}
-        bg={bg || "white"}
-        color={color || "gray.800"}
-        placeholder={placeholder}
+        borderColor={propBorderColor || inputBorderColor}
+        _hover={prop_hover || { borderColor: hoverBorderColor }}
+        _focus={
+          prop_focus || { borderColor: focusBorderColor, boxShadow: "outline" }
+        }
+        borderRadius={propBorderRadius || "md"}
+        bg={propBg || inputBg}
+        color={propColor || inputColor}
+        placeholder={placeholder || defaultPlaceholderText} 
+        _placeholder={{ color: placeholderColor }} 
       />
     </FormControl>
   );

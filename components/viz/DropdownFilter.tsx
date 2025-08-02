@@ -2,7 +2,13 @@
 
 import React from "react";
 import { IFilter, IDataset } from "../../types";
-import { FormControl, FormLabel, Select, Box } from "@chakra-ui/react";
+import {
+  FormControl,
+  FormLabel,
+  Select,
+  Box,
+  useColorMode,
+} from "@chakra-ui/react";
 
 interface DropdownFilterProps {
   config: IFilter;
@@ -12,6 +18,8 @@ interface DropdownFilterProps {
 }
 
 export function DropdownFilter(props: DropdownFilterProps) {
+  const { colorMode } = useColorMode();
+
   const values = React.useMemo(() => {
     return props.data
       .map((row) => row[props.config.column])
@@ -27,32 +35,48 @@ export function DropdownFilter(props: DropdownFilterProps) {
     [props.onChange]
   );
 
+  // styling adaptif berdasarkan colorMode
+  const labelColor = colorMode === "light" ? "gray.700" : "whiteAlpha.800";
+  const selectBg = colorMode === "light" ? "white" : "gray.700";
+  const selectColor = colorMode === "light" ? "gray.800" : "whiteAlpha.900";
+  const selectBorderColor = colorMode === "light" ? "gray.300" : "gray.600";
+  const hoverBorderColor = colorMode === "light" ? "gray.400" : "gray.500";
+  const focusBorderColor = colorMode === "light" ? "blue.500" : "blue.300";
+
   return (
     <FormControl
       id={`filter-${props.config.column}`}
       width="180px"
       minW="120px"
     >
-      <FormLabel fontSize="sm" mb={1}>
+      <FormLabel fontSize="sm" mb={1} color={labelColor}>
         {" "}
         {props.config.title}
       </FormLabel>
       <Select
-        value={props.value || ""} 
+        value={props.value || ""}
         onChange={handleChange}
-        size="sm" 
-        borderRadius="md" 
-        borderColor="gray.300" 
-        _hover={{ borderColor: "gray.400" }} 
-        _focus={{ borderColor: "blue.500", boxShadow: "outline" }} 
-        bg="white" 
-        color="gray.800"
+        size="sm"
+        borderRadius="md"
+        borderColor={selectBorderColor}
+        _hover={{ borderColor: hoverBorderColor }}
+        _focus={{ borderColor: focusBorderColor, boxShadow: "outline" }}
+        bg={selectBg}
+        color={selectColor}
       >
-        <option key={"None"} value="">
+        <option
+          key={"None"}
+          value=""
+          style={{ background: selectBg, color: selectColor }}
+        >
           None
         </option>
         {values.map((value) => (
-          <option key={value} value={value}>
+          <option
+            key={value}
+            value={value}
+            style={{ background: selectBg, color: selectColor }}
+          >
             {value}
           </option>
         ))}

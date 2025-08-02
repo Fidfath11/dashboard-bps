@@ -11,8 +11,18 @@ import {
   Button,
   IconButton,
   Link,
+  Image,
+  useColorMode,
 } from "@chakra-ui/react";
-import { SettingsIcon, DeleteIcon, ArrowForwardIcon } from "@chakra-ui/icons";
+import {
+  SettingsIcon,
+  DeleteIcon,
+  ArrowForwardIcon,
+  ViewIcon,
+  QuestionOutlineIcon,
+  AtSignIcon,
+  InfoOutlineIcon,
+} from "@chakra-ui/icons";
 
 import {
   SettingsModal,
@@ -37,9 +47,10 @@ import { parseData } from "../utils/parseData";
 import gtag from "../lib/gtag";
 
 export default function Home() {
-  const [view, setView] = React.useState<"prompt" | "code" | "dashboard">(
-    "dashboard"
-  );
+  const { colorMode } = useColorMode(); 
+  const [view, setView] = React.useState<
+    "prompt" | "code" | "dashboard" | "table"
+  >("dashboard");
   const [settings, setSettings] = React.useState<ISettings>({
     apikey: "",
     sampleRows: 10,
@@ -67,7 +78,7 @@ export default function Home() {
     setDashboard(dashboard);
     setUserContext(context);
     setCurrentSampleIndex(index);
-    setView("prompt");
+    setView("dashboard");
   }, []);
 
   const handleAnalyze = React.useCallback(() => {
@@ -77,7 +88,7 @@ export default function Home() {
       setLoading(true);
       setErrorMessage(null);
       generateDashboard(
-        data,
+        data!, 
         userContext,
         settings.sampleRows,
         settings.apikey,
@@ -109,7 +120,7 @@ export default function Home() {
     setCurrentSampleIndex(index);
     setFileName(null);
     setErrorMessage(null);
-    setView("dashboard");
+    setView("dashboard"); 
   }, [currentSampleIndex, setView]);
 
   const handleClear = React.useCallback(() => {
@@ -118,7 +129,7 @@ export default function Home() {
     setUserContext("");
     setFileName(null);
     setErrorMessage(null);
-    setView("dashboard");
+    setView("dashboard"); 
   }, [setView]);
 
   const handleSettingsChange = React.useCallback((settings: ISettings) => {
@@ -145,7 +156,7 @@ export default function Home() {
       setDashboard(null);
       setFileName(uploadedFileName);
       setErrorMessage(null);
-      setView("prompt");
+      setView("table"); 
     },
     [setView]
   );
@@ -158,6 +169,89 @@ export default function Home() {
     setUserContext("");
   }, []);
 
+  const sidebarWidth = "250px"; 
+  const headerHeight = "50px"; 
+
+  // Konten yang akan dirender di panel kanan berdasarkan 'view' state
+  let rightPanelContent: React.ReactNode = null;
+  if (errorMessage) {
+    rightPanelContent = <OpenAIErrorMessage>{errorMessage}</OpenAIErrorMessage>;
+  } else if (view === "dashboard") {
+    if (dashboard && data) {
+      rightPanelContent = <Dashboard dashboard={dashboard!} data={data!} />;
+    } else if (!settings.apikey && !data) {
+      rightPanelContent = (
+        <MissingApiKeyMessage
+          onApiKeyClick={handleShowSettings}
+          onRandomData={handleRandomDataset}
+        />
+      );
+    } else if (settings.apikey && !data) {
+      rightPanelContent = (
+        <EmptyMessage
+          onRandomData={handleRandomDataset}
+          onUpload={handleDatasetChange}
+        />
+      );
+    } else if (settings.apikey && data && !dashboard) {
+      rightPanelContent = <DataLoadedMessage onAnalyze={handleAnalyze} />;
+    } else {
+      rightPanelContent = null;
+    }
+  } else if (view === "code") {
+    rightPanelContent = dashboard && <CodeHighlighter dashboard={dashboard!} />;
+  } else if (view === "table") {
+    rightPanelContent = (
+      <Box flexGrow={1} display="flex" flexDirection="column">
+        <Flex justifyContent="space-between" mb={4}>
+          <UploadDatasetButton onUpload={handleDatasetChange} />
+          <Button
+            variant="outline"
+            colorScheme="blue"
+            leftIcon={<DeleteIcon />}
+            disabled={!data}
+            onClick={handleClear}
+            borderRadius="md"
+            flexGrow={1}
+            ml={2}
+            maxW="120px"
+            size="sm"
+          >
+            Clear
+          </Button>
+        </Flex>
+        <Table
+          data={data || []}
+          onChange={(newData) => {
+            setData(newData);
+          }}
+        />
+      </Box>
+    );
+  } else if (view === "prompt") {
+    // Hanya panggil generatePrompt jika data ada
+    const generatedPromptValue = data
+      ? generatePrompt(data!, userContext, settings.sampleRows, settings.model)
+      : "Upload data dan masukkan konteks untuk melihat prompt yang dihasilkan.";
+
+    rightPanelContent = (
+      <Box flexGrow={1} display="flex" flexDirection="column">
+        <Text mb={4} color={colorMode === "light" ? "black" : "whiteAlpha.900"}>
+          {" "}
+          You can see the generated prompt code here.
+        </Text>
+        <TextAreaInput
+          disabled
+          value={generatedPromptValue}
+          minH="490px"
+          flexGrow={1}
+        />
+      </Box>
+    );
+  } else {
+    rightPanelContent = null;
+  }
+
   return (
     <>
       <Head>
@@ -165,30 +259,18 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="author" content="BPS" />
         <meta name="og:type" content="website" />
-        <meta
-          property="og:image"
-          content=""
-        />
+        <meta property="og:image" content="" />
         <meta property="og:title" content="BPS AI Dashboard" />
         <meta
           property="og:description"
           content="Visualize data with our tool created using OpenAI's GPT3 technology"
         />
-        <meta
-          name="og:url"
-          content=""
-        />
+        <meta name="og:url" content="" />
         <meta name="twitter:creator" content="BPS" />
-        <meta
-          property="twitter:image"
-          content=""
-        />
+        <meta property="twitter:image" content="" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="BPS AI Dashboard" />
-        <meta
-          name="twitter:url"
-          content=""
-        />
+        <meta name="twitter:url" content="" />
         <meta
           property="twitter:description"
           content="Visualize and analyze data with our app created using OpenAI's GPT3"
@@ -196,152 +278,216 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
+      {/* MainHeader sudah fixed di posisinya */}
       <MainHeader
         onSettingsClick={handleShowSettings}
         onRandomData={handleRandomDataset}
         currentView={view}
         onViewChange={setView}
+        fileName={fileName} // Meneruskan fileName ke MainHeader
+        onUpload={handleDatasetChange} // Meneruskan fungsi upload ke MainHeader
       />
 
+      {/* Konten utama di bawah header: Sidebar + Panel Kanan */}
       <Flex
-        direction={{ base: "column", md: "row" }}
-        gap={6}
-        p={6}
-        width="full"
-        maxW="1440px"
-        mx="auto"
+        direction="row"
         flexGrow={1}
-        height="calc(100vh - 70px)"
-        overflowY="auto"
+        mt={headerHeight}
+        height="calc(100vh - 50px)"
+        overflow="hidden"
       >
+        {/* Panel Kiri (Sidebar) */}
         <Box
-          flex="0 0 auto"
-          width={{ base: "full", md: "300px", lg: "400px" }}
-          bg="white"
-          p={6}
+          width="250px"
+          bg={colorMode === "light" ? "white" : "gray.800"}
+          color={colorMode === "light" ? "black" : "whiteAlpha.900"}
+          p={4}
           borderRadius="lg"
-          boxShadow="lg"
-          minH={{ base: "auto", md: "calc(100vh - 150px)" }}
+          boxShadow={colorMode === "light" ? "lg" : "dark-lg"}
+          display="flex"
+          flexDirection="column"
+          height="100%"
+          overflowY="hidden"
+          flexShrink={0}
         >
-          <Heading as="h2" size="md" mb={4} color="brand.primary">
-            {fileName || "AI Data Dashboard"}
-          </Heading>
-
-          <Table
-            data={data || []}
-            onChange={(newData) => {
-              setData(newData);
-            }}
-          />
-
-          <Flex justifyContent="space-between" mb={4} mt={4}>
-            <UploadDatasetButton onUpload={handleDatasetChange} />
-
+          {/* Menu Navigasi */}
+          <Box mb={6} flexShrink={0} pt={4}>
+            {" "}
             <Button
-              variant="outline"
-              colorScheme="blue"
-              leftIcon={<DeleteIcon />}
-              disabled={!data}
-              onClick={handleClear}
-              borderRadius="md"
-              flexGrow={1}
-              ml={2}
-              maxW="120px"
-              size="sm"
+              variant="ghost"
+              width="full"
+              justifyContent="flex-start"
+              mb={2}
+              onClick={() => setView("dashboard")}
+              leftIcon={<InfoOutlineIcon />}
+              isActive={view === "dashboard"}
+              _active={{ bg: "blue.500", color: "white" }}
+              _hover={{
+                bg:
+                  view === "dashboard"
+                    ? "blue.500"
+                    : colorMode === "light"
+                    ? "gray.100"
+                    : "whiteAlpha.200",
+                color:
+                  view === "dashboard"
+                    ? "white"
+                    : colorMode === "light"
+                    ? "gray.800"
+                    : "whiteAlpha.800",
+              }}
             >
-              Clear
+              Dashboard
+            </Button>{" "}
+            <Button
+              variant="ghost"
+              width="full"
+              justifyContent="flex-start"
+              mb={2}
+              onClick={() => setView("table")}
+              leftIcon={<ViewIcon />}
+              isActive={view === "table"}
+              _active={{ bg: "blue.500", color: "white" }}
+              _hover={{
+                bg:
+                  view === "table"
+                    ? "blue.500"
+                    : colorMode === "light"
+                    ? "gray.100"
+                    : "whiteAlpha.200",
+                color:
+                  view === "table"
+                    ? "white"
+                    : colorMode === "light"
+                    ? "gray.800"
+                    : "whiteAlpha.800",
+              }}
+            >
+              Table
             </Button>
-          </Flex>
-
-          <TextAreaInput
-            label={
-              <Flex
-                alignItems="center"
-                justifyContent="space-between"
-                width="full"
-              >
-                <Text>Context about the data</Text>
-                <IconButton
-                  icon={<DeleteIcon />}
-                  aria-label="Clear Context"
-                  variant="ghost"
-                  colorScheme="gray"
-                  size="sm"
-                  onClick={handleClearContext}
-                />
-              </Flex>
-            }
-            value={userContext}
-            onChange={setUserContext}
-            mb={4}
-          />
-
-          <Button
-            colorScheme="green"
-            rightIcon={
-              settings?.apikey && dashboard && data ? (
-                <ArrowForwardIcon />
-              ) : undefined
-            }
-            onClick={handleAnalyze}
-            disabled={!data && !!settings?.apikey}
-            borderRadius="md"
-            width="full"
-            mt={0}
-          >
-            {(() => {
-              if (!settings.apikey) return "Set up your API KEY";
-              return dashboard && data ? "Re-analyze" : "Analyze";
-            })()}
-          </Button>
+            <Button
+              variant="ghost"
+              width="full"
+              justifyContent="flex-start"
+              mb={2}
+              onClick={() => setView("prompt")}
+              leftIcon={<QuestionOutlineIcon />}
+              isActive={view === "prompt"}
+              _active={{ bg: "blue.500", color: "white" }}
+              _hover={{
+                bg:
+                  view === "prompt"
+                    ? "blue.500"
+                    : colorMode === "light"
+                    ? "gray.100"
+                    : "whiteAlpha.200",
+                color:
+                  view === "prompt"
+                    ? "white"
+                    : colorMode === "light"
+                    ? "gray.800"
+                    : "whiteAlpha.800",
+              }}
+            >
+              Prompt
+            </Button>
+            <Button
+              variant="ghost"
+              width="full"
+              justifyContent="flex-start"
+              mb={2}
+              onClick={() => setView("code")}
+              leftIcon={<AtSignIcon />}
+              isActive={view === "code"}
+              _active={{ bg: "blue.500", color: "white" }}
+              _hover={{
+                bg:
+                  view === "code"
+                    ? "blue.500"
+                    : colorMode === "light"
+                    ? "gray.100"
+                    : "whiteAlpha.200",
+                color:
+                  view === "code"
+                    ? "white"
+                    : colorMode === "light"
+                    ? "gray.800"
+                    : "whiteAlpha.800",
+              }}
+            >
+              Code
+            </Button>{" "}
+          </Box>
+          {/* Area untuk TextAreaInput dan Analyze Button (Selalu di Sidebar) */}
+          <Box flexGrow={1} display="flex" flexDirection="column" pt={4}>
+            {" "}
+            {/* pt untuk padding dari atas Menu Navigasi */}
+            <TextAreaInput
+              label={
+                <Flex
+                  alignItems="center"
+                  justifyContent="space-between"
+                  width="full"
+                >
+                  <Text color={colorMode === "light" ? "black" : "white"}>
+                    Context about the data
+                  </Text>{" "}
+                  <IconButton
+                    icon={<DeleteIcon />}
+                    aria-label="Clear Context"
+                    variant="ghost"
+                    colorScheme={colorMode === "light" ? "gray" : "white"}
+                    _hover={{
+                      bg: colorMode === "light" ? "gray.100" : "whiteAlpha.200",
+                    }}
+                    size="sm"
+                    onClick={handleClearContext}
+                  />
+                </Flex>
+              }
+              value={userContext}
+              onChange={setUserContext}
+              mb={0}
+              flexGrow={1}
+              minH="210px"
+            />
+            <Button
+              colorScheme={colorMode === "light" ? "green" : "teal"}
+              rightIcon={
+                settings?.apikey && dashboard && data ? (
+                  <ArrowForwardIcon />
+                ) : undefined
+              }
+              onClick={handleAnalyze}
+              disabled={!data && !!settings?.apikey}
+              borderRadius="md"
+              width="full"
+              mt={0}
+              flexShrink={0}
+            >
+              {(() => {
+                if (!settings.apikey) return "Set up your API KEY";
+                return dashboard && data ? "Re-analyze" : "Analyze";
+              })()}
+            </Button>
+          </Box>
         </Box>
-
+        {/* Panel Kanan (Konten Utama Dashboard) */}
         <Box
           flex="1"
-          bg="white"
+          // bg={colorMode === "light" ? "gray.50" : "gray.700"} // Perbaikan: Bg panel kanan adaptif
           p={6}
           borderRadius="lg"
-          boxShadow="lg"
-          height="full"
+          boxShadow={colorMode === "light" ? "inner" : "dark-inner"}
+          display="flex"
+          flexDirection="column"
+          height="100%"
           overflowY="auto"
+          ml="15px"
+          mt={15}
+          color={colorMode === "light" ? "black" : "whiteAlpha.900"}
         >
-          {!settings.apikey && !data && !dashboard ? (
-            <MissingApiKeyMessage
-              onApiKeyClick={handleShowSettings}
-              onRandomData={handleRandomDataset}
-            />
-          ) : null}
-          {settings.apikey && !data && !dashboard ? (
-            <EmptyMessage
-              onRandomData={handleRandomDataset}
-              onUpload={handleDatasetChange}
-            />
-          ) : null}
-          {settings.apikey && data && !dashboard ? (
-            <DataLoadedMessage onAnalyze={handleAnalyze} />
-          ) : null}
-          {dashboard && data && view === "dashboard" ? (
-            <Dashboard dashboard={dashboard} data={data} />
-          ) : null}
-          {dashboard && view === "code" ? (
-            <CodeHighlighter dashboard={dashboard} />
-          ) : null}
-          {data && view === "prompt" && (
-            <TextAreaInput
-              disabled
-              value={generatePrompt(
-                data,
-                userContext,
-                settings.sampleRows,
-                settings.model
-              )}
-              minH="300px"
-            />
-          )}
-
-          {errorMessage && (
-            <OpenAIErrorMessage>{errorMessage}</OpenAIErrorMessage>
-          )}
+          {rightPanelContent}
         </Box>
       </Flex>
 

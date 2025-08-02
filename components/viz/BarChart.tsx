@@ -73,7 +73,7 @@ export function BarChart(
       <ResponsiveContainer minWidth={minChartWidth} height={350}>
         <RBarChart
           data={data}
-          margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+          margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
           barCategoryGap={barGap}
         >
           <XAxis

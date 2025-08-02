@@ -17,7 +17,7 @@
   --blueLinkHover: #2a38cf;
   --darkGrey: #6e7086;
   --borderColor: rgb(210, 211, 226);
-  --texture: repeating-linear-gradient(
+  --texture: repeating-linear-linear-gradient(
     -45deg,
     rgba(210, 211, 226, 0.5),
     rgba(210, 211, 226, 0.5) 1px,
@@ -35,9 +35,9 @@
 html,
 body,
 #__next {
-  height: 100%;
-  width: 100%;
-  overflow-x: hidden;
+  height: 100%; /* Memastikan elemen mengisi tinggi penuh viewport */
+  width: 100%; /* Memastikan elemen mengisi lebar penuh viewport */
+  overflow: hidden; /* Mencegah scroll halaman penuh */
   font-family: "Roboto", sans-serif;
 }
 
