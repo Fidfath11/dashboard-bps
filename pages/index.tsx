@@ -449,7 +449,7 @@ export default function Home() {
               onChange={setUserContext}
               mb={0}
               flexGrow={1}
-              minH="200px"
+              minH="180px"
             />
             <Button
               colorScheme={colorMode === "light" ? "green" : "teal"}
