@@ -478,7 +478,7 @@ export default function Home() {
           // bg={colorMode === "light" ? "gray.50" : "gray.700"} // Perbaikan: Bg panel kanan adaptif
           p={6}
           borderRadius="lg"
-          boxShadow={colorMode === "light" ? "inner" : "dark-inner"}
+          // boxShadow={colorMode === "light" ? "inner" : "dark-inner"}
           display="flex"
           flexDirection="column"
           height="100%"
