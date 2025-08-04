@@ -1,4 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap");
+/* D:\BPS_Dashboard\dashboard-bps\styles\globals.css */
+
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
 
 :root {
   --brandColor: #03d47f;
@@ -10,7 +12,7 @@
 
   --bgColor: #f4f6fa;
   --secondaryColor: #d3ffab;
-  --brandBlue: #4353ff;
+  --brandBlue: #4353ff; 
   --blueLink: #4353ff;
 
   --brandBlueHover: #2a38cf;
@@ -24,6 +26,10 @@
     transparent 1px,
     transparent 6px
   );
+
+  /* Variabel CSS untuk warna brand dari tema Chakra UI Anda */
+  --bps-primary: #002B6A; /* Biru Tua */
+  --bps-primary-accent: #2D95C9; /* Biru Cerah */
 }
 
 * {
@@ -35,9 +41,9 @@
 html,
 body,
 #__next {
-  height: 100%; /* Memastikan elemen mengisi tinggi penuh viewport */
-  width: 100%; /* Memastikan elemen mengisi lebar penuh viewport */
-  overflow: hidden; /* Mencegah scroll halaman penuh */
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
   font-family: "Roboto", sans-serif;
 }
 
@@ -70,6 +76,27 @@ textarea {
   color: var(--textColor);
 }
 
+/* --- CSS UNTUK TEKS GRADIEN LIGHT MODE --- */
+.bps-vista-gradient-light {
+  background: linear-gradient(to right, #002B6A, #2D95C9); /* Biru tua ke Biru cerah */
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent; /* Fallback */
+}
+
+/* --- CSS UNTUK TEKS GRADIEN DARK MODE --- */
+/* Tidak perlu media query di sini, karena kelas akan diterapkan secara kondisional dari JSX */
+.bps-vista-gradient-dark {
+  background: linear-gradient(to right, #2D95C9, white); /* Biru cerah ke Putih */
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+/* --- AKHIR CSS UNTUK TEKS GRADIEN --- */
+
+/* Bagian Media Query prefers-color-scheme tetap ada untuk variabel theme */
 @media (prefers-color-scheme: dark) {
   :root {
     --bgColor: #191a30;

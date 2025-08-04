@@ -10,15 +10,14 @@ import {
   Spacer,
   Image,
   Button,
-  useColorMode,
+  useColorMode, // Import useColorMode
 } from "@chakra-ui/react";
 
-import {
-  SettingsIcon,
-  AttachmentIcon,
-  SunIcon,
-  MoonIcon,
-} from "@chakra-ui/icons";
+import { FaRegFileAlt } from "react-icons/fa";
+import { FaRandom } from "react-icons/fa";
+import { IoSettings } from "react-icons/io5";
+
+import { SunIcon, MoonIcon } from "@chakra-ui/icons";
 
 interface MainHeaderProps {
   onSettingsClick: () => void;
@@ -30,7 +29,7 @@ interface MainHeaderProps {
 }
 
 export function MainHeader(props: MainHeaderProps) {
-  const { colorMode, toggleColorMode } = useColorMode();
+  const { colorMode, toggleColorMode } = useColorMode(); // Dapatkan colorMode dari hook
   const fileNameDisplay = props.fileName
     ? props.fileName
     : "Upload your data to get started! or";
@@ -104,13 +103,17 @@ export function MainHeader(props: MainHeaderProps) {
           alt="Logo BPS"
           height="30px"
           width="auto"
-          mr={{ base: 2, md: 3 }}
+          mr={1}
         />
         <Heading
           as="h1"
           size={{ base: "sm", md: "md" }}
           mr={{ base: 2, md: 4 }}
-          color={colorMode === "light" ? "black" : "white"}
+          // --- PENTING: Terapkan className secara kondisional ---
+          className={colorMode === "light" ? "bps-vista-gradient-light" : "bps-vista-gradient-dark"}
+          // --- END PENTING ---
+          fontFamily="heading" // Menggunakan 'heading' dari tema (Roboto)
+          // Properti underline sudah dihapus
         >
           BPS VISTA
         </Heading>
@@ -121,13 +124,13 @@ export function MainHeader(props: MainHeaderProps) {
         {" "}
         {/* Ikon Data/File untuk Upload */}
         <IconButton
-          icon={<AttachmentIcon />}
+          icon={<FaRegFileAlt />}
           aria-label="Upload Data"
           variant="ghost"
           colorScheme={colorMode === "light" ? "gray" : "white"}
           _hover={{ bg: colorMode === "light" ? "gray.100" : "whiteAlpha.200" }}
           size="md"
-          mr={2}
+          mr={0}
           onClick={handleUploadFileClick}
         />
         <Text
@@ -145,6 +148,7 @@ export function MainHeader(props: MainHeaderProps) {
         </Text>
         {/* Tombol Random Data */}
         <Button
+          leftIcon={<FaRandom />}
           size="sm"
           onClick={props.onRandomData}
           ml={4}
@@ -174,7 +178,7 @@ export function MainHeader(props: MainHeaderProps) {
           onClick={toggleColorMode}
         />
         <IconButton
-          icon={<SettingsIcon />}
+          icon={<IoSettings />}
           aria-label="Settings"
           variant="ghost"
           colorScheme={colorMode === "light" ? "gray" : "white"}

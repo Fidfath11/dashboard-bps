@@ -14,15 +14,13 @@ import {
   Image,
   useColorMode,
 } from "@chakra-ui/react";
-import {
-  SettingsIcon,
-  DeleteIcon,
-  ArrowForwardIcon,
-  ViewIcon,
-  QuestionOutlineIcon,
-  AtSignIcon,
-  InfoOutlineIcon,
-} from "@chakra-ui/icons";
+
+// Import ikon dari react-icons
+import { MdDashboard } from "react-icons/md"; 
+import { FaTable, FaCode } from "react-icons/fa"; 
+import { TbAnalyze } from "react-icons/tb";
+import { TbPrompt } from "react-icons/tb";
+import { DeleteIcon } from "@chakra-ui/icons"; 
 
 import {
   SettingsModal,
@@ -47,7 +45,7 @@ import { parseData } from "../utils/parseData";
 import gtag from "../lib/gtag";
 
 export default function Home() {
-  const { colorMode } = useColorMode(); 
+  const { colorMode } = useColorMode();
   const [view, setView] = React.useState<
     "prompt" | "code" | "dashboard" | "table"
   >("dashboard");
@@ -88,7 +86,7 @@ export default function Home() {
       setLoading(true);
       setErrorMessage(null);
       generateDashboard(
-        data!, 
+        data!,
         userContext,
         settings.sampleRows,
         settings.apikey,
@@ -120,7 +118,7 @@ export default function Home() {
     setCurrentSampleIndex(index);
     setFileName(null);
     setErrorMessage(null);
-    setView("dashboard"); 
+    setView("dashboard");
   }, [currentSampleIndex, setView]);
 
   const handleClear = React.useCallback(() => {
@@ -129,7 +127,7 @@ export default function Home() {
     setUserContext("");
     setFileName(null);
     setErrorMessage(null);
-    setView("dashboard"); 
+    setView("dashboard");
   }, [setView]);
 
   const handleSettingsChange = React.useCallback((settings: ISettings) => {
@@ -156,7 +154,7 @@ export default function Home() {
       setDashboard(null);
       setFileName(uploadedFileName);
       setErrorMessage(null);
-      setView("table"); 
+      setView("table");
     },
     [setView]
   );
@@ -169,8 +167,8 @@ export default function Home() {
     setUserContext("");
   }, []);
 
-  const sidebarWidth = "250px"; 
-  const headerHeight = "50px"; 
+  const sidebarWidth = "250px";
+  const headerHeight = "50px";
 
   // Konten yang akan dirender di panel kanan berdasarkan 'view' state
   let rightPanelContent: React.ReactNode = null;
@@ -237,7 +235,6 @@ export default function Home() {
     rightPanelContent = (
       <Box flexGrow={1} display="flex" flexDirection="column">
         <Text mb={4} color={colorMode === "light" ? "black" : "whiteAlpha.900"}>
-          {" "}
           You can see the generated prompt code here.
         </Text>
         <TextAreaInput
@@ -312,14 +309,13 @@ export default function Home() {
         >
           {/* Menu Navigasi */}
           <Box mb={6} flexShrink={0} pt={4}>
-            {" "}
             <Button
               variant="ghost"
               width="full"
               justifyContent="flex-start"
               mb={2}
               onClick={() => setView("dashboard")}
-              leftIcon={<InfoOutlineIcon />}
+              leftIcon={<MdDashboard />} 
               isActive={view === "dashboard"}
               _active={{ bg: "blue.500", color: "white" }}
               _hover={{
@@ -338,14 +334,14 @@ export default function Home() {
               }}
             >
               Dashboard
-            </Button>{" "}
+            </Button>
             <Button
               variant="ghost"
               width="full"
               justifyContent="flex-start"
               mb={2}
               onClick={() => setView("table")}
-              leftIcon={<ViewIcon />}
+              leftIcon={<FaTable />}
               isActive={view === "table"}
               _active={{ bg: "blue.500", color: "white" }}
               _hover={{
@@ -371,7 +367,7 @@ export default function Home() {
               justifyContent="flex-start"
               mb={2}
               onClick={() => setView("prompt")}
-              leftIcon={<QuestionOutlineIcon />}
+              leftIcon={<TbPrompt  />}
               isActive={view === "prompt"}
               _active={{ bg: "blue.500", color: "white" }}
               _hover={{
@@ -397,7 +393,7 @@ export default function Home() {
               justifyContent="flex-start"
               mb={0}
               onClick={() => setView("code")}
-              leftIcon={<AtSignIcon />}
+              leftIcon={<FaCode />}
               isActive={view === "code"}
               _active={{ bg: "blue.500", color: "white" }}
               _hover={{
@@ -420,8 +416,6 @@ export default function Home() {
           </Box>
           {/* Area untuk TextAreaInput dan Analyze Button (Selalu di Sidebar) */}
           <Box flexGrow={0} display="flex" flexDirection="column" pt={0}>
-            {" "}
-            {/* pt untuk padding dari atas Menu Navigasi */}
             <TextAreaInput
               label={
                 <Flex
@@ -431,7 +425,7 @@ export default function Home() {
                 >
                   <Text color={colorMode === "light" ? "black" : "white"}>
                     Context about the data
-                  </Text>{" "}
+                  </Text>
                   <IconButton
                     icon={<DeleteIcon />}
                     aria-label="Clear Context"
@@ -455,7 +449,7 @@ export default function Home() {
               colorScheme={colorMode === "light" ? "green" : "teal"}
               rightIcon={
                 settings?.apikey && dashboard && data ? (
-                  <ArrowForwardIcon />
+                  <TbAnalyze/>
                 ) : undefined
               }
               onClick={handleAnalyze}
@@ -475,10 +469,8 @@ export default function Home() {
         {/* Panel Kanan (Konten Utama Dashboard) */}
         <Box
           flex="1"
-          // bg={colorMode === "light" ? "gray.50" : "gray.700"} // Perbaikan: Bg panel kanan adaptif
           p={6}
           borderRadius="lg"
-          // boxShadow={colorMode === "light" ? "inner" : "dark-inner"}
           display="flex"
           flexDirection="column"
           height="100%"
