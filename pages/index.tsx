@@ -419,7 +419,7 @@ export default function Home() {
             </Button>{" "}
           </Box>
           {/* Area untuk TextAreaInput dan Analyze Button (Selalu di Sidebar) */}
-          <Box flexGrow={1} display="flex" flexDirection="column" pt={4}>
+          <Box flexGrow={0} display="flex" flexDirection="column" pt={0}>
             {" "}
             {/* pt untuk padding dari atas Menu Navigasi */}
             <TextAreaInput
@@ -449,7 +449,7 @@ export default function Home() {
               onChange={setUserContext}
               mb={0}
               flexGrow={1}
-              minH="210px"
+              minH="200px"
             />
             <Button
               colorScheme={colorMode === "light" ? "green" : "teal"}
@@ -462,7 +462,7 @@ export default function Home() {
               disabled={!data && !!settings?.apikey}
               borderRadius="md"
               width="full"
-              mt={0}
+              mt={2}
               flexShrink={0}
             >
               {(() => {
