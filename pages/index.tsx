@@ -395,7 +395,7 @@ export default function Home() {
               variant="ghost"
               width="full"
               justifyContent="flex-start"
-              mb={2}
+              mb={0}
               onClick={() => setView("code")}
               leftIcon={<AtSignIcon />}
               isActive={view === "code"}
