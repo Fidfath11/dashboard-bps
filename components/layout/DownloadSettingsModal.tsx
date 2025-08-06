@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -42,20 +42,21 @@ export function DownloadSettingsModal(props: DownloadSettingsModalProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
-  const generatePreview = async () => {
+  // PERBAIKAN: Menggunakan useCallback untuk generatePreview
+  const generatePreview = useCallback(async () => {
     if (dashboardContentRef.current) {
       setIsLoadingPreview(true);
       const canvas = await html2canvas(dashboardContentRef.current, { scale: 1 });
       setPreviewImage(canvas.toDataURL("image/png"));
       setIsLoadingPreview(false);
     }
-  };
+  }, [dashboardContentRef]);
 
   useEffect(() => {
     if (isOpen) {
       generatePreview();
     }
-  }, [isOpen]);
+  }, [isOpen, generatePreview]); // PERBAIKAN: Menambahkan generatePreview ke dependency array
 
   const handleDownloadClick = () => {
     onDownload({ size: selectedSize, margins });
@@ -72,7 +73,6 @@ export function DownloadSettingsModal(props: DownloadSettingsModalProps) {
         <ModalCloseButton />
         <ModalBody py={6}>
           <Flex direction={{ base: "column", md: "row" }} gap={4}>
-            {/* Kolom Pengaturan */}
             <Box flex={{ base: 1, md: 0.4 }} p={4} borderRadius="md" bg={colorMode === "light" ? "gray.50" : "gray.700"}>
               <FormControl mb={4}>
                 <FormLabel>Ukuran Halaman</FormLabel>
@@ -94,8 +94,6 @@ export function DownloadSettingsModal(props: DownloadSettingsModalProps) {
                 Perbarui Pratinjau
               </Button>
             </Box>
-
-            {/* Kolom Pratinjau */}
             <Box flex={{ base: 1, md: 0.6 }} p={4} borderRadius="md" borderWidth="1px" borderColor={colorMode === "light" ? "gray.200" : "gray.600"}>
               <Heading size="sm" mb={2}>Pratinjau</Heading>
               <Box height="250px" overflowY="auto" position="relative" bg="white" boxShadow="inner">
@@ -114,7 +112,6 @@ export function DownloadSettingsModal(props: DownloadSettingsModalProps) {
             </Box>
           </Flex>
         </ModalBody>
-
         <ModalFooter borderTop="1px" borderColor={colorMode === "light" ? "gray.200" : "gray.600"}>
           <Button variant="ghost" onClick={onClose} mr={3}>
             Batal

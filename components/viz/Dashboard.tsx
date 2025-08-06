@@ -20,7 +20,6 @@ interface DashboardProps {
   data: IDataset;
 }
 
-// PERBAIKAN: Menggunakan React.forwardRef untuk menerima 'ref' dari parent
 export const Dashboard = React.forwardRef<HTMLDivElement, DashboardProps>((props, ref) => {
   const { colorMode } = useColorMode();
   const [filters, setFilters] = React.useState<Record<string, string>>({});
@@ -77,7 +76,6 @@ export const Dashboard = React.forwardRef<HTMLDivElement, DashboardProps>((props
   }, [filters, props.data]);
 
   return (
-    // PERBAIKAN: Menambahkan 'ref' ke elemen Box terluar
     <Box p={0} ref={ref}>
       <Wrap spacing={4} mb={6} justify="center">
         {props.dashboard.filters.map((filter, index) => {
@@ -127,4 +125,5 @@ export const Dashboard = React.forwardRef<HTMLDivElement, DashboardProps>((props
   );
 });
 
-export default Dashboard;
+// PERBAIKAN: Menambahkan display name
+Dashboard.displayName = 'Dashboard';
