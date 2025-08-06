@@ -1,6 +1,6 @@
 /* D:\BPS_Dashboard\dashboard-bps\styles\globals.css */
 
-@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
 :root {
   --brandColor: #03d47f;
@@ -19,7 +19,7 @@
   --blueLinkHover: #2a38cf;
   --darkGrey: #6e7086;
   --borderColor: rgb(210, 211, 226);
-  --texture: repeating-linear-linear-gradient(
+  --texture: repeating-linear-gradient(
     -45deg,
     rgba(210, 211, 226, 0.5),
     rgba(210, 211, 226, 0.5) 1px,
@@ -44,7 +44,7 @@ body,
   height: 100%;
   width: 100%;
   overflow: hidden;
-  font-family: "Roboto", sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 body {
@@ -78,7 +78,7 @@ textarea {
 
 /* --- CSS UNTUK TEKS GRADIEN LIGHT MODE --- */
 .bps-vista-gradient-light {
-  background: linear-gradient(to right, #002B6A, #2D95C9); /* Biru tua ke Biru cerah */
+  background: linear-gradient(to right, var(--bps-primary), var(--bps-primary-accent));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -86,15 +86,13 @@ textarea {
 }
 
 /* --- CSS UNTUK TEKS GRADIEN DARK MODE --- */
-/* Tidak perlu media query di sini, karena kelas akan diterapkan secara kondisional dari JSX */
 .bps-vista-gradient-dark {
-  background: linear-gradient(to right, #2D95C9, white); /* Biru cerah ke Putih */
+  background: linear-gradient(to right, var(--bps-primary-accent), white);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
 }
-/* --- AKHIR CSS UNTUK TEKS GRADIEN --- */
 
 /* Bagian Media Query prefers-color-scheme tetap ada untuk variabel theme */
 @media (prefers-color-scheme: dark) {

@@ -5,7 +5,6 @@ import { IChart, IDataset } from "../../types";
 
 import {
   CartesianGrid,
-  Legend,
   Line,
   LineChart as RLineChart,
   ResponsiveContainer,
@@ -17,8 +16,7 @@ import { runFunc } from "../../utils/parseFunc";
 import { ErrorBoundary } from "../layout/ErrorBoundary";
 import { formatNumber } from "../../utils/numberFormatter";
 import { IChartData } from "../../utils/parseFunc";
-
-import { Box, useTheme, Text, Flex, Center } from '@chakra-ui/react';
+import { useTheme, Text, Center, useColorMode } from '@chakra-ui/react';
 
 interface LineChartProps {
   config: IChart;
@@ -26,22 +24,28 @@ interface LineChartProps {
   zoomLevel?: number;
 }
 
-export function LineChart(
-  props: React.PropsWithChildren<LineChartProps>
-) {
+export function LineChart(props: React.PropsWithChildren<LineChartProps>) {
   const theme = useTheme();
+  const { colorMode } = useColorMode();
 
-  const CHART_COLORS = React.useMemo(() => [
-    theme.colors.purple[500],
-    theme.colors.blue[500],
-    theme.colors.green[500],
-    theme.colors.orange[500],
-    theme.colors.red[500],
-  ], [theme]);
+  const CHART_COLORS = React.useMemo(
+    () => [
+      theme.colors.purple[500],
+      theme.colors.blue[500],
+      theme.colors.green[500],
+      theme.colors.orange[500],
+      theme.colors.red[500],
+    ],
+    [theme]
+  );
 
   const data = React.useMemo(() => {
     const fallbackValue: IChartData[] = [];
-    const result = runFunc(props.config.javascriptFunction, props.data, fallbackValue);
+    const result = runFunc(
+      props.config.javascriptFunction,
+      props.data,
+      fallbackValue
+    );
     if (!Array.isArray(result)) return null;
     return result;
   }, [props.config, props.data]);
@@ -55,7 +59,6 @@ export function LineChart(
   }
 
   const effectiveZoom = props.zoomLevel !== undefined ? props.zoomLevel : 0;
-  
   const baseLineSpacing = 60;
   const zoomFactor = 1.2;
   const currentLineSpacing = baseLineSpacing * Math.pow(zoomFactor, effectiveZoom);
@@ -64,6 +67,9 @@ export function LineChart(
     500,
     data.length * Math.max(10, currentLineSpacing) + 100
   );
+
+  const axisColor = colorMode === "light" ? theme.colors.gray[600] : theme.colors.gray[300];
+  const gridColor = colorMode === "light" ? theme.colors.gray[200] : theme.colors.gray[600];
 
   return (
     <ErrorBoundary>
@@ -74,22 +80,26 @@ export function LineChart(
         >
           <XAxis
             hide={false}
-            stroke={theme.colors.gray[600]}
+            stroke={axisColor}
             dataKey={"x"}
             interval="preserveStartEnd"
             angle={-45}
             textAnchor="end"
             height={60}
-            tick={{ fontSize: 10 }}
+            tick={{ fontSize: 10, fill: axisColor }}
           />
           <YAxis
-            stroke={theme.colors.gray[600]}
+            stroke={axisColor}
             tickFormatter={formatNumber}
-            tick={{ fontSize: 12 }}
+            tick={{ fontSize: 12, fill: axisColor }}
           />
-          <Tooltip formatter={(value) => formatNumber(value as number)} />
+          <Tooltip
+            formatter={(value) => formatNumber(value as number)}
+            contentStyle={{ backgroundColor: colorMode === "light" ? "white" : "#1A202C", border: "1px solid #4A5568" }}
+            labelStyle={{ color: colorMode === "light" ? "#1A202C" : "white" }}
+          />
           <CartesianGrid
-            stroke={theme.colors.gray[200]}
+            stroke={gridColor}
             strokeDasharray="5 5"
           />
           <Line type="monotone" dataKey={"y"} stroke={CHART_COLORS[0]} dot={false} />

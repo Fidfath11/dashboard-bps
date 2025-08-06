@@ -6,21 +6,19 @@ import React from "react";
 import {
   Flex,
   Box,
-  Heading,
   Text,
   Button,
   IconButton,
-  Link,
-  Image,
   useColorMode,
+  Tooltip,
 } from "@chakra-ui/react";
 
 // Import ikon dari react-icons
-import { MdDashboard } from "react-icons/md"; 
-import { FaTable, FaCode } from "react-icons/fa"; 
+import { MdDashboard } from "react-icons/md";
+import { FaTable, FaCode } from "react-icons/fa";
 import { TbAnalyze } from "react-icons/tb";
 import { TbPrompt } from "react-icons/tb";
-import { DeleteIcon } from "@chakra-ui/icons"; 
+import { DeleteIcon } from "@chakra-ui/icons";
 
 import {
   SettingsModal,
@@ -159,10 +157,6 @@ export default function Home() {
     [setView]
   );
 
-  const handleClick = React.useCallback(() => {
-    setUserContext(" ");
-  }, []);
-
   const handleClearContext = React.useCallback(() => {
     setUserContext("");
   }, []);
@@ -172,7 +166,9 @@ export default function Home() {
 
   // Konten yang akan dirender di panel kanan berdasarkan 'view' state
   let rightPanelContent: React.ReactNode = null;
-  if (errorMessage) {
+  if (loading) {
+    rightPanelContent = <Loader />;
+  } else if (errorMessage) {
     rightPanelContent = <OpenAIErrorMessage>{errorMessage}</OpenAIErrorMessage>;
   } else if (view === "dashboard") {
     if (dashboard && data) {
@@ -222,6 +218,7 @@ export default function Home() {
           data={data || []}
           onChange={(newData) => {
             setData(newData);
+            setDashboard(null); // Tambahkan ini agar dashboard direset saat tabel diubah
           }}
         />
       </Box>
@@ -242,6 +239,7 @@ export default function Home() {
           value={generatedPromptValue}
           minH="490px"
           flexGrow={1}
+          placeholder="Generated prompt code will appear here..."
         />
       </Box>
     );
@@ -279,8 +277,6 @@ export default function Home() {
       <MainHeader
         onSettingsClick={handleShowSettings}
         onRandomData={handleRandomDataset}
-        currentView={view}
-        onViewChange={setView}
         fileName={fileName} // Meneruskan fileName ke MainHeader
         onUpload={handleDatasetChange} // Meneruskan fungsi upload ke MainHeader
       />
@@ -309,110 +305,119 @@ export default function Home() {
         >
           {/* Menu Navigasi */}
           <Box mb={6} flexShrink={0} pt={4}>
-            <Button
-              variant="ghost"
-              width="full"
-              justifyContent="flex-start"
-              mb={2}
-              onClick={() => setView("dashboard")}
-              leftIcon={<MdDashboard />} 
-              isActive={view === "dashboard"}
-              _active={{ bg: "blue.500", color: "white" }}
-              _hover={{
-                bg:
-                  view === "dashboard"
-                    ? "blue.500"
-                    : colorMode === "light"
-                    ? "gray.100"
-                    : "whiteAlpha.200",
-                color:
-                  view === "dashboard"
-                    ? "white"
-                    : colorMode === "light"
-                    ? "gray.800"
-                    : "whiteAlpha.800",
-              }}
-            >
-              Dashboard
-            </Button>
-            <Button
-              variant="ghost"
-              width="full"
-              justifyContent="flex-start"
-              mb={2}
-              onClick={() => setView("table")}
-              leftIcon={<FaTable />}
-              isActive={view === "table"}
-              _active={{ bg: "blue.500", color: "white" }}
-              _hover={{
-                bg:
-                  view === "table"
-                    ? "blue.500"
-                    : colorMode === "light"
-                    ? "gray.100"
-                    : "whiteAlpha.200",
-                color:
-                  view === "table"
-                    ? "white"
-                    : colorMode === "light"
-                    ? "gray.800"
-                    : "whiteAlpha.800",
-              }}
-            >
-              Table
-            </Button>
-            <Button
-              variant="ghost"
-              width="full"
-              justifyContent="flex-start"
-              mb={2}
-              onClick={() => setView("prompt")}
-              leftIcon={<TbPrompt  />}
-              isActive={view === "prompt"}
-              _active={{ bg: "blue.500", color: "white" }}
-              _hover={{
-                bg:
-                  view === "prompt"
-                    ? "blue.500"
-                    : colorMode === "light"
-                    ? "gray.100"
-                    : "whiteAlpha.200",
-                color:
-                  view === "prompt"
-                    ? "white"
-                    : colorMode === "light"
-                    ? "gray.800"
-                    : "whiteAlpha.800",
-              }}
-            >
-              Prompt
-            </Button>
-            <Button
-              variant="ghost"
-              width="full"
-              justifyContent="flex-start"
-              mb={0}
-              onClick={() => setView("code")}
-              leftIcon={<FaCode />}
-              isActive={view === "code"}
-              _active={{ bg: "blue.500", color: "white" }}
-              _hover={{
-                bg:
-                  view === "code"
-                    ? "blue.500"
-                    : colorMode === "light"
-                    ? "gray.100"
-                    : "whiteAlpha.200",
-                color:
-                  view === "code"
-                    ? "white"
-                    : colorMode === "light"
-                    ? "gray.800"
-                    : "whiteAlpha.800",
-              }}
-            >
-              Code
-            </Button>{" "}
+            {/* Menggunakan Tooltip untuk informasi tambahan pada ikon */}
+            <Tooltip label="View Dashboard" placement="right">
+              <Button
+                variant="ghost"
+                width="full"
+                justifyContent="flex-start"
+                mb={2}
+                onClick={() => setView("dashboard")}
+                leftIcon={<MdDashboard />}
+                isActive={view === "dashboard"}
+                _active={{ bg: "blue.500", color: "white" }}
+                _hover={{
+                  bg:
+                    view === "dashboard"
+                      ? "blue.500"
+                      : colorMode === "light"
+                      ? "gray.100"
+                      : "whiteAlpha.200",
+                  color:
+                    view === "dashboard"
+                      ? "white"
+                      : colorMode === "light"
+                      ? "gray.800"
+                      : "whiteAlpha.800",
+                }}
+              >
+                Dashboard
+              </Button>
+            </Tooltip>
+            <Tooltip label="View Data Table" placement="right">
+              <Button
+                variant="ghost"
+                width="full"
+                justifyContent="flex-start"
+                mb={2}
+                onClick={() => setView("table")}
+                leftIcon={<FaTable />}
+                isActive={view === "table"}
+                _active={{ bg: "blue.500", color: "white" }}
+                _hover={{
+                  bg:
+                    view === "table"
+                      ? "blue.500"
+                      : colorMode === "light"
+                      ? "gray.100"
+                      : "whiteAlpha.200",
+                  color:
+                    view === "table"
+                      ? "white"
+                      : colorMode === "light"
+                      ? "gray.800"
+                      : "whiteAlpha.800",
+                }}
+              >
+                Table
+              </Button>
+            </Tooltip>
+            <Tooltip label="View Generated Prompt" placement="right">
+              <Button
+                variant="ghost"
+                width="full"
+                justifyContent="flex-start"
+                mb={2}
+                onClick={() => setView("prompt")}
+                leftIcon={<TbPrompt />}
+                isActive={view === "prompt"}
+                _active={{ bg: "blue.500", color: "white" }}
+                _hover={{
+                  bg:
+                    view === "prompt"
+                      ? "blue.500"
+                      : colorMode === "light"
+                      ? "gray.100"
+                      : "whiteAlpha.200",
+                  color:
+                    view === "prompt"
+                      ? "white"
+                      : colorMode === "light"
+                      ? "gray.800"
+                      : "whiteAlpha.800",
+                }}
+              >
+                Prompt
+              </Button>
+            </Tooltip>
+            <Tooltip label="View Generated Code" placement="right">
+              <Button
+                variant="ghost"
+                width="full"
+                justifyContent="flex-start"
+                mb={0}
+                onClick={() => setView("code")}
+                leftIcon={<FaCode />}
+                isActive={view === "code"}
+                _active={{ bg: "blue.500", color: "white" }}
+                _hover={{
+                  bg:
+                    view === "code"
+                      ? "blue.500"
+                      : colorMode === "light"
+                      ? "gray.100"
+                      : "whiteAlpha.200",
+                  color:
+                    view === "code"
+                      ? "white"
+                      : colorMode === "light"
+                      ? "gray.800"
+                      : "whiteAlpha.800",
+                }}
+              >
+                Code
+              </Button>
+            </Tooltip>
           </Box>
           {/* Area untuk TextAreaInput dan Analyze Button (Selalu di Sidebar) */}
           <Box flexGrow={0} display="flex" flexDirection="column" pt={0}>
@@ -444,13 +449,12 @@ export default function Home() {
               mb={0}
               flexGrow={1}
               minH="170px"
+              placeholder="Provide additional context about your data here..."
             />
             <Button
               colorScheme={colorMode === "light" ? "green" : "teal"}
               rightIcon={
-                settings?.apikey && dashboard && data ? (
-                  <TbAnalyze/>
-                ) : undefined
+                settings?.apikey && dashboard && data ? <TbAnalyze /> : undefined
               }
               onClick={handleAnalyze}
               disabled={!data && !!settings?.apikey}

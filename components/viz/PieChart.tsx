@@ -15,8 +15,7 @@ import { runFunc, agregateData } from "../../utils/parseFunc";
 import { ErrorBoundary } from "../layout/ErrorBoundary";
 import { formatNumber } from "../../utils/numberFormatter";
 import { IChartData } from "../../utils/parseFunc";
-
-import { Box, useTheme, Flex, Text } from "@chakra-ui/react";
+import { Box, useTheme, Flex, Text, Center, useColorMode } from "@chakra-ui/react";
 
 export function PieChart(
   props: React.PropsWithChildren<{
@@ -25,6 +24,7 @@ export function PieChart(
   }>
 ) {
   const theme = useTheme();
+  const { colorMode } = useColorMode();
 
   const CHART_COLORS = React.useMemo(
     () => [
@@ -71,7 +71,17 @@ export function PieChart(
     }));
   }, [rawData]);
 
-  if (!pieChartData || pieChartData.length === 0) return null;
+  if (!pieChartData || pieChartData.length === 0) {
+    return (
+      <Center height="100%">
+        <Text color="gray.500">Data tidak tersedia.</Text>
+      </Center>
+    );
+  }
+  
+  const textColor = colorMode === "light" ? "gray.700" : "whiteAlpha.800";
+  const tooltipBg = colorMode === "light" ? "white" : "#1A202C";
+  const tooltipBorder = colorMode === "light" ? "gray.300" : "#4A5568";
 
   return (
     <ErrorBoundary>
@@ -103,6 +113,8 @@ export function PieChart(
               formatNumber(value as number),
               props.payload.name,
             ]}
+            contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}` }}
+            labelStyle={{ color: textColor }}
           />
           <Legend
             verticalAlign="bottom"
@@ -111,7 +123,7 @@ export function PieChart(
             formatter={(value, entry) => {
               if (entry && (entry.payload as any)?.name) {
                 return (
-                  <Text as="span" fontSize="sm" color="gray.700">
+                  <Text as="span" fontSize="sm" color={textColor}>
                     {(entry.payload as any).name}
                   </Text>
                 );

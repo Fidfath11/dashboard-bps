@@ -1,80 +1,49 @@
-// D:\BPS_Dashboard\ai-data-dashboard\components\layout\EmptyMessage.tsx
-
 import React from "react";
-import styles from "../../styles/Components.module.scss";
-import { Button } from "./Button";
-import { ButtonLink } from "./ButtonLink";
+import { Box, Heading, Text, Button, useColorMode, Link } from "@chakra-ui/react";
+import { FaRandom } from "react-icons/fa";
+import { FaRegFileAlt } from "react-icons/fa";
+import { UploadDatasetButton } from "./UploadDatasetButton";
 
 interface EmptyMessageProps {
-  onUpload: (dataset: string | ArrayBuffer, uploadedFileName: string) => void;
   onRandomData: () => void;
+  onUpload: (dataset: string | ArrayBuffer, uploadedFileName: string) => void;
 }
 
-export function EmptyMessage(
-  props: React.PropsWithChildren<EmptyMessageProps>
-) {
-  const inputFileRef = React.useRef<HTMLInputElement>(null);
-
-  const handleUploadFileClick = React.useCallback(() => {
-    inputFileRef.current?.click?.();
-  }, []);
-
-  const handleUploadFile = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      e.preventDefault();
-      if (e.target.files && e.target.files.length > 0) {
-        const inputFile = e.target.files[0];
-        const reader = new FileReader();
-
-        const isCSV = inputFile.name.endsWith(".csv");
-        const isXLSX =
-          inputFile.name.endsWith(".xlsx") ||
-          inputFile.type ===
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-        const fileName = inputFile.name;
-
-        reader.onload = function (event) {
-          if (isCSV) {
-            const text = event?.target?.result as string;
-            if (text) {
-              props.onUpload?.(text, fileName);
-            }
-          } else if (isXLSX) {
-            const arrayBuffer = event?.target?.result as ArrayBuffer;
-            if (arrayBuffer) {
-              props.onUpload?.(arrayBuffer, fileName);
-            }
-          }
-        };
-
-        if (isCSV) {
-          reader.readAsText(inputFile);
-        } else if (isXLSX) {
-          reader.readAsArrayBuffer(inputFile);
-        }
-      }
-    },
-    [props.onUpload]
-  );
+export function EmptyMessage(props: EmptyMessageProps) {
+  const { onRandomData, onUpload } = props;
+  const { colorMode } = useColorMode();
 
   return (
-    <div className={styles.emptyMessageContainer}>
-      <div className={styles.emptyMessage}>
-        <ButtonLink onClick={handleUploadFileClick}>
-          Upload your data
-        </ButtonLink>{" "}
-        and then click in Analyze or{" "}
-        <ButtonLink onClick={props.onRandomData} accent="BRAND">
-          try it with random data
-        </ButtonLink>
-        <input
-          ref={inputFileRef}
-          hidden
-          type="file"
-          onChange={handleUploadFile}
-          accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-        />
-      </div>
-    </div>
+    <Box
+      textAlign="center"
+      py={10}
+      px={6}
+      bg={colorMode === "light" ? "white" : "gray.800"}
+      borderRadius="lg"
+      boxShadow="lg"
+      color={colorMode === "light" ? "gray.800" : "whiteAlpha.900"}
+    >
+      <Heading size="md" mb={4}>
+        Selamat Datang!
+      </Heading>
+      <Text mb={6}>
+        Silakan unggah file data Anda untuk memulai. Anda dapat menggunakan file CSV atau XLSX.
+      </Text>
+      <Box display="flex" flexDirection={{ base: "column", md: "row" }} justifyContent="center" alignItems="center">
+        <UploadDatasetButton onUpload={onUpload} />
+        <Text display={{ base: "none", md: "block" }} mx={4}>
+          atau
+        </Text>
+        <Button
+          leftIcon={<FaRandom />}
+          colorScheme="teal"
+          variant="outline"
+          onClick={onRandomData}
+          mt={{ base: 4, md: 0 }}
+        >
+          Gunakan Data Contoh
+        </Button>
+      </Box>
+    </Box>
   );
 }

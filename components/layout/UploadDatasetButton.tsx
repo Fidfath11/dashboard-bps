@@ -1,15 +1,16 @@
-// D:\BPS_Dashboard\ai-data-dashboard\components\layout\UploadDatasetButton.tsx
-
 import React from "react";
-import { Button } from "./Button";
-import { AddIcon } from "@chakra-ui/icons";
-import { parseData, stringifyData } from "../../utils/parseData";
+import { Button, useColorMode } from "@chakra-ui/react";
+import { FaRegFileAlt } from "react-icons/fa";
+import Papa from "papaparse";
+import * as xlsx from "xlsx";
 
 interface UploadDatasetButtonProps {
   onUpload: (dataset: string | ArrayBuffer, uploadedFileName: string) => void;
 }
 
 export function UploadDatasetButton(props: UploadDatasetButtonProps) {
+  const { onUpload } = props;
+  const { colorMode } = useColorMode();
   const inputFileRef = React.useRef<HTMLInputElement>(null);
 
   const handleUploadFileClick = React.useCallback(() => {
@@ -24,22 +25,19 @@ export function UploadDatasetButton(props: UploadDatasetButtonProps) {
         const reader = new FileReader();
 
         const isCSV = inputFile.name.endsWith(".csv");
-        const isXLSX =
-          inputFile.name.endsWith(".xlsx") ||
-          inputFile.type ===
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        const isXLSX = inputFile.name.endsWith(".xlsx");
         const fileName = inputFile.name;
 
         reader.onload = function (event) {
           if (isCSV) {
             const text = event?.target?.result as string;
             if (text) {
-              props.onUpload?.(text, fileName);
+              onUpload?.(text, fileName);
             }
           } else if (isXLSX) {
             const arrayBuffer = event?.target?.result as ArrayBuffer;
             if (arrayBuffer) {
-              props.onUpload?.(arrayBuffer, fileName);
+              onUpload?.(arrayBuffer, fileName);
             }
           }
         };
@@ -51,19 +49,20 @@ export function UploadDatasetButton(props: UploadDatasetButtonProps) {
         }
       }
     },
-    [props.onUpload]
+    [onUpload]
   );
 
   return (
     <>
       <Button
+        leftIcon={<FaRegFileAlt />}
+        colorScheme="blue"
         onClick={handleUploadFileClick}
-        colorScheme="brand"
-        bg="brand.primaryAccent"
-        _hover={{ bg: "#257DA3" }}
-        leftIcon={<AddIcon />}
         borderRadius="md"
+        flexGrow={1}
         size="sm"
+        width="full"
+        maxW="120px"
       >
         Upload Data
       </Button>

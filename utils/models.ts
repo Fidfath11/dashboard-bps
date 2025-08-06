@@ -9,6 +9,11 @@ export const getPromptModel = (model: string) => {
       break;
     default:
       promptModel = promptTemplate;
-  };
+  }
   return promptModel;
 };
+
+export const models = [
+  { label: "GPT-3.5 Turbo", value: "gpt-3.5-turbo" },
+  { label: "Text-Davinci-003", value: "text-davinci-003" },
+];

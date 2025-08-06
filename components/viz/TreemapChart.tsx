@@ -2,15 +2,13 @@
 
 import React from "react";
 import { IChart, IDataset } from "../../types"; 
-import styles from "../../styles/Components.module.scss";
 import { Treemap as RTreemap, ResponsiveContainer, Tooltip } from "recharts";
-import { parseFunc, agregateData, runFunc, IChartData } from "../../utils/parseFunc";
+import { runFunc, agregateData, IChartData } from "../../utils/parseFunc";
 import { ErrorBoundary } from "../layout/ErrorBoundary";
 import { palette } from "../../utils/palette";
 import { formatNumber } from "../../utils/numberFormatter";
-import { Box, useTheme, Text, Flex, Center } from '@chakra-ui/react'; 
+import { Box, useTheme, Text, Center } from '@chakra-ui/react'; 
 
-// Fungsi untuk membuat label kustom
 const CustomizedTreemapContent = ({
   root,
   depth,
@@ -30,13 +28,13 @@ const CustomizedTreemapContent = ({
         width={width}
         height={height}
         style={{
-          fill: depth < 2 ? colors[Math.floor(Math.random() * 6)] : "none",
+          fill: depth < 2 ? colors[Math.floor(Math.random() * colors.length)] : "none",
           stroke: "#fff",
           strokeWidth: 2 / (depth + 1e-4),
           strokeOpacity: 1 / (depth + 1e-4)
         }}
       />
-      {depth === 1 ? (
+      {depth === 1 && width > 40 && height > 20 ? (
         <text
           x={x + width / 2}
           y={y + height / 2 + 7}
@@ -88,6 +86,11 @@ export function TreemapChart(
       </Center>
     );
   }
+  
+  const formattedData = rawData.map((d, index) => ({
+    name: d.x || `Tidak Tersedia ${index}`,
+    value: d.y,
+  }));
 
   return (
     <ErrorBoundary>
@@ -95,7 +98,7 @@ export function TreemapChart(
         <RTreemap
           width={400}
           height={200}
-          data={rawData.map((d) => ({ name: d.x || 'Tidak Tersedia', value: d.y }))}
+          data={formattedData}
           dataKey="value"
           aspectRatio={4/3}
           stroke="var(--textColor)"

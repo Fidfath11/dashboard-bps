@@ -12,24 +12,19 @@ import {
   Button,
   useColorMode, // Import useColorMode
 } from "@chakra-ui/react";
-
-import { FaRegFileAlt } from "react-icons/fa";
-import { FaRandom } from "react-icons/fa";
+import { FaRegFileAlt, FaRandom } from "react-icons/fa";
 import { IoSettings } from "react-icons/io5";
-
 import { SunIcon, MoonIcon } from "@chakra-ui/icons";
 
 interface MainHeaderProps {
   onSettingsClick: () => void;
   onRandomData: () => void;
-  currentView: "prompt" | "code" | "dashboard" | "table";
-  onViewChange: (newView: "prompt" | "code" | "dashboard" | "table") => void;
   fileName?: string | null;
   onUpload: (dataset: string | ArrayBuffer, uploadedFileName: string) => void;
 }
 
 export function MainHeader(props: MainHeaderProps) {
-  const { colorMode, toggleColorMode } = useColorMode(); // Dapatkan colorMode dari hook
+  const { colorMode, toggleColorMode } = useColorMode();
   const fileNameDisplay = props.fileName
     ? props.fileName
     : "Upload your data to get started! or";
@@ -109,20 +104,19 @@ export function MainHeader(props: MainHeaderProps) {
           as="h1"
           size={{ base: "sm", md: "md" }}
           mr={{ base: 2, md: 4 }}
-          // --- PENTING: Terapkan className secara kondisional ---
-          className={colorMode === "light" ? "bps-vista-gradient-light" : "bps-vista-gradient-dark"}
-          // --- END PENTING ---
-          fontFamily="heading" // Menggunakan 'heading' dari tema (Roboto)
-          // Properti underline sudah dihapus
+          className={
+            colorMode === "light"
+              ? "bps-vista-gradient-light"
+              : "bps-vista-gradient-dark"
+          }
+          fontFamily="heading"
         >
           BPS VISTA
         </Heading>
       </Flex>
-      <Spacer />{" "}
+      <Spacer />
       {/* Bagian Kanan Header: Icon Data, Nama File / Upload Info, Random Data Button, Dark Mode, Settings */}
       <Flex alignItems="center" flexGrow={0}>
-        {" "}
-        {/* Ikon Data/File untuk Upload */}
         <IconButton
           icon={<FaRegFileAlt />}
           aria-label="Upload Data"
@@ -146,7 +140,6 @@ export function MainHeader(props: MainHeaderProps) {
         >
           {fileNameDisplay}
         </Text>
-        {/* Tombol Random Data */}
         <Button
           leftIcon={<FaRandom />}
           size="sm"
@@ -165,7 +158,6 @@ export function MainHeader(props: MainHeaderProps) {
           onChange={handleUploadFile}
           accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
         />
-        {/* Ikon Dark Mode / Light Mode */}
         <IconButton
           icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
           aria-label="Toggle color mode"

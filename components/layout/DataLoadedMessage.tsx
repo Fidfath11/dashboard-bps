@@ -1,19 +1,33 @@
 import React from "react";
-import styles from "../../styles/Components.module.scss";
-import { Button } from "./Button";
-import { ButtonLink } from "./ButtonLink";
+import { Box, Heading, Text, Button, useColorMode } from "@chakra-ui/react";
 
-export function DataLoadedMessage(
-  props: React.PropsWithChildren<{
-    onAnalyze: () => void;
-  }>
-) {
+interface DataLoadedMessageProps {
+  onAnalyze: () => void;
+}
+
+export function DataLoadedMessage(props: DataLoadedMessageProps) {
+  const { onAnalyze } = props;
+  const { colorMode } = useColorMode();
+
   return (
-    <div className={styles.emptyMessageContainer}>
-      <div className={styles.emptyMessage}>
-        Click on <ButtonLink onClick={props.onAnalyze}>analyze</ButtonLink> to
-        generate the dashboard.
-      </div>
-    </div>
+    <Box
+      textAlign="center"
+      py={10}
+      px={6}
+      bg={colorMode === "light" ? "white" : "gray.800"}
+      borderRadius="lg"
+      boxShadow="lg"
+      color={colorMode === "light" ? "gray.800" : "whiteAlpha.900"}
+    >
+      <Heading size="md" mb={4}>
+        Data Anda Telah Diunggah!
+      </Heading>
+      <Text mb={6}>
+        Silakan klik tombol "Analyze" di bawah untuk melihat hasilnya. Anda juga dapat menambahkan konteks tambahan di sidebar sebelah kiri untuk hasil yang lebih akurat.
+      </Text>
+      <Button colorScheme="green" onClick={onAnalyze}>
+        Analyze
+      </Button>
+    </Box>
   );
 }

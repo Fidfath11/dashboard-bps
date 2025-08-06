@@ -57,7 +57,6 @@ export function TextAreaInput(props: TextAreaInputProps) {
     h,
     minH,
     maxH,
-
     borderColor: propBorderColor,
     _hover: prop_hover,
     _focus: prop_focus,
@@ -89,7 +88,7 @@ export function TextAreaInput(props: TextAreaInputProps) {
       if (onChange) {
         onChange(internalValue);
       }
-    }, 500); // Waktu debounce 500ms
+    }, 500);
 
     return () => {
       if (timeoutRef.current) {
@@ -105,7 +104,6 @@ export function TextAreaInput(props: TextAreaInputProps) {
     []
   );
 
-  // styling adaptif berdasarkan colorMode
   const inputBg = colorMode === "light" ? "white" : "gray.700";
   const inputColor = colorMode === "light" ? "gray.800" : "whiteAlpha.900";
   const inputBorderColor = colorMode === "light" ? "gray.300" : "gray.600";
@@ -113,9 +111,7 @@ export function TextAreaInput(props: TextAreaInputProps) {
   const focusBorderColor = colorMode === "light" ? "blue.500" : "blue.300";
   const placeholderColor = colorMode === "light" ? "gray.500" : "gray.400";
 
-  // Teks placeholder default
-  const defaultPlaceholderText =
-    "Masukan pertanyaan atau instruksi analisis data disini...";
+  const defaultPlaceholderText = "Masukan pertanyaan atau instruksi analisis data disini...";
 
   return (
     <FormControl

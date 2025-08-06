@@ -1,14 +1,4 @@
-// D:\BPS_Dashboard\ai-data-dashboard\components\layout\SettingsModal.tsx
-
-import React from "react";
-import styles from "../../styles/Components.module.scss";
-import gtag from "../../lib/gtag";
-import { Button } from "./Button";
-import { TextInput } from "./TextInput"; 
-import SelectInput from "./SelectInput";
-import { GPT_MODEL } from "../../openai/constants";
 import {
-  useColorMode,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -16,115 +6,90 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
-  FormControl,
-  FormLabel,
+  Button,
+  Box,
+  Heading,
+  useColorMode,
 } from "@chakra-ui/react";
+import React from "react";
+import { ISettings } from "../../types";
+import { SelectInput } from "./SelectInput";
+import { TextInput } from "./TextInput";
+import { models } from "../../utils/models";
+import { ChangeEvent } from "react";
 
-export function SettingsModal(
-  props: React.PropsWithChildren<{
-    value: {
-      apikey: string;
-      sampleRows: number;
-      model: string;
-    };
-    onChange?: (value: {
-      apikey: string;
-      sampleRows: number;
-      model: string;
-    }) => void;
-    onCancel?: () => void;
-  }>
-) {
+interface SettingsModalProps {
+  value: ISettings;
+  onChange: (value: ISettings) => void;
+  onCancel: () => void;
+}
+
+export function SettingsModal(props: SettingsModalProps) {
+  const [tempValue, setTempValue] = React.useState(props.value);
   const { colorMode } = useColorMode();
-  const [settings, setSettings] = React.useState(props.value);
 
-  const handleApiKeyChange = React.useCallback(
-    (apikey: string) => {
-      setSettings((prevSettings) => ({ ...prevSettings, apikey }));
-    },
-    [setSettings]
-  );
+  React.useEffect(() => {
+    setTempValue(props.value);
+  }, [props.value]);
 
-  const handleRowsSampleChange = React.useCallback(
-    (sampleRowsString: string) => {
-      setSettings((prevSettings) => ({
-        ...prevSettings,
-        sampleRows: Number(sampleRowsString),
-      }));
-    },
-    [setSettings]
-  );
+  const handleTextChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    if (id === "apikey-input") {
+      setTempValue({ ...tempValue, apikey: value });
+    } else if (id === "sample-rows-input") {
+      setTempValue({ ...tempValue, sampleRows: Number(value) });
+    }
+  };
 
-  const handleModelChange = React.useCallback(
-    (model: string) => {
-      setSettings((prevSettings) => ({ ...prevSettings, model }));
-    },
-    [setSettings]
-  );
-
-  const handleSave = React.useCallback(() => {
-    const { onChange } = props;
-    gtag.report("event", "api_key", {
-      event_category: "settings",
-      event_label: "setting_up",
-    });
-    onChange?.(settings);
-  }, [props.onChange, settings]);
-
-  const handleCancel = React.useCallback(() => {
-    const { onCancel } = props;
-    onCancel?.();
-  }, [props.onCancel]);
-
-  // warna modal berdasarkan colorMode
-  const modalBg = colorMode === "light" ? "white" : "gray.800";
-  const modalColor = colorMode === "light" ? "black" : "white";
+  const handleSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const { value } = e.target;
+    setTempValue({ ...tempValue, model: value });
+  };
 
   return (
-    <Modal isOpen onClose={handleCancel}>
+    <Modal isOpen={true} onClose={props.onCancel} size="xl">
       <ModalOverlay />
-      <ModalContent bg={modalBg} color={modalColor}>
-        <ModalHeader>Settings</ModalHeader>
+      <ModalContent bg={colorMode === "light" ? "white" : "gray.800"}>
+        <ModalHeader borderBottom="1px" borderColor={colorMode === "light" ? "gray.200" : "gray.600"}>
+          <Heading size="md">Pengaturan Analisis Data</Heading>
+        </ModalHeader>
         <ModalCloseButton />
-        <ModalBody>
+        <ModalBody py={6}>
           <TextInput
-            value={settings.apikey}
-            onChange={handleApiKeyChange}
-            label={
-              <>
-                API Key{" "}
-                <a
-                  rel="noreferrer"
-                  target="_blank"
-                  href="https://beta.openai.com/account/api-keys"
-                >
-                  Get your API key here
-                </a>
-              </>
-            }
-            type="text"
-            mb="4"
+            label="Kunci API OpenAI"
+            value={tempValue?.apikey || ""}
+            onChange={handleTextChange}
+            mb={4}
+            type="password"
+            id="apikey-input"
           />
           <TextInput
-            value={String(settings.sampleRows)}
-            onChange={handleRowsSampleChange}
-            label="Rows to sample"
+            label="Jumlah Baris Sampel untuk Prompt"
+            value={tempValue?.sampleRows?.toString() || "10"}
+            onChange={handleTextChange}
             type="number"
-            mb="4"
+            mb={4}
+            id="sample-rows-input"
           />
           <SelectInput
-            onChange={handleModelChange}
-            options={Object.values(GPT_MODEL)}
-            title="Model"
-            value={settings.model}
+            label="Model OpenAI"
+            value={tempValue?.model || models[0].value}
+            options={models}
+            onChange={handleSelectChange}
+            mb={4}
           />
         </ModalBody>
-
-        <ModalFooter>
-          <Button variant="outline" onClick={handleCancel} mr={3}>
-            Cancel
+        <ModalFooter borderTop="1px" borderColor={colorMode === "light" ? "gray.200" : "gray.600"}>
+          <Button
+            variant="ghost"
+            onClick={props.onCancel}
+            mr={3}
+          >
+            Batal
           </Button>
-          <Button onClick={handleSave}>Save</Button>
+          <Button colorScheme="blue" onClick={() => props.onChange(tempValue)}>
+            Simpan
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
