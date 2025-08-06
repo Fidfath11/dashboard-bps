@@ -1,8 +1,5 @@
-// D:\BPS_Dashboard\ai-data-dashboard\components\viz\Dashboard.tsx
-
 import React from "react";
-import { IDashboard, IDataset, IDatasetRecord } from "../../types";
-
+import { IDashboard, IDataset } from "../../types";
 import {
   Box,
   Flex,
@@ -12,7 +9,7 @@ import {
   Wrap,
   WrapItem,
   IconButton,
-  useColorMode, 
+  useColorMode,
 } from "@chakra-ui/react";
 import { AddIcon, MinusIcon } from "@chakra-ui/icons";
 import { DropdownFilter } from "./DropdownFilter";
@@ -29,10 +26,8 @@ export function Dashboard(
     data: IDataset;
   }>
 ) {
-  const { colorMode } = useColorMode(); 
-  const [filters, setFilters] = React.useState<
-    Pick<IDatasetRecord, keyof IDatasetRecord>
-  >({});
+  const { colorMode } = useColorMode();
+  const [filters, setFilters] = React.useState<Record<string, string>>({});
 
   const [chartZoomLevels, setChartZoomLevels] = React.useState<
     Record<string, number>
@@ -47,9 +42,9 @@ export function Dashboard(
     setShuffledCharts(shuffleArray([...props.dashboard.charts]));
   }, [props.dashboard.charts]);
 
-  const handleFilterChange = React.useCallback((filter: string) => {
+  const handleFilterChange = React.useCallback((column: string) => {
     return (value: string) => {
-      setFilters((filters) => ({ ...filters, [filter]: value }));
+      setFilters((filters) => ({ ...filters, [column]: value }));
     };
   }, []);
 
@@ -81,18 +76,24 @@ export function Dashboard(
 
   return (
     <Box p={0}>
-      {" "}
       <Wrap spacing={4} mb={6} justify="center">
-        {props.dashboard.filters.map((filter, index) => (
-          <WrapItem key={`${filter.column}-${index}`}>
-            <DropdownFilter
-              config={filter}
-              data={props.data}
-              onChange={handleFilterChange(filter.column)}
-              value={filters[filter.column]}
-            />
-          </WrapItem>
-        ))}
+        {props.dashboard.filters.map((filter, index) => {
+          // PERBAIKAN: Menggunakan Array.from() untuk kompatibilitas yang lebih baik
+          const options = Array.from(
+            new Set(props.data.map((row) => row[filter.column]))
+          ) as string[];
+
+          return (
+            <WrapItem key={`${filter.column}-${index}`}>
+              <DropdownFilter
+                label={filter.column}
+                value={filters[filter.column]}
+                onChange={handleFilterChange(filter.column)}
+                options={options}
+              />
+            </WrapItem>
+          );
+        })}
       </Wrap>
       <Divider
         mb={6}
