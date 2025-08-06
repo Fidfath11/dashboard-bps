@@ -1,8 +1,5 @@
-// D:\BPS_Dashboard\ai-data-dashboard\components\layout\MainHeader.tsx
-
 import React from "react";
 import {
-  Box,
   Flex,
   Heading,
   Text,
@@ -10,8 +7,9 @@ import {
   Spacer,
   Image,
   Button,
-  useColorMode, // Import useColorMode
+  useColorMode,
 } from "@chakra-ui/react";
+
 import { FaRegFileAlt, FaRandom } from "react-icons/fa";
 import { IoSettings } from "react-icons/io5";
 import { SunIcon, MoonIcon } from "@chakra-ui/icons";
@@ -24,6 +22,7 @@ interface MainHeaderProps {
 }
 
 export function MainHeader(props: MainHeaderProps) {
+  const { onUpload, onRandomData, onSettingsClick } = props;
   const { colorMode, toggleColorMode } = useColorMode();
   const fileNameDisplay = props.fileName
     ? props.fileName
@@ -52,12 +51,12 @@ export function MainHeader(props: MainHeaderProps) {
           if (isCSV) {
             const text = event?.target?.result as string;
             if (text) {
-              props.onUpload?.(text, fileName);
+              onUpload?.(text, fileName);
             }
           } else if (isXLSX) {
             const arrayBuffer = event?.target?.result as ArrayBuffer;
             if (arrayBuffer) {
-              props.onUpload?.(arrayBuffer, fileName);
+              onUpload?.(arrayBuffer, fileName);
             }
           }
         };
@@ -69,7 +68,7 @@ export function MainHeader(props: MainHeaderProps) {
         }
       }
     },
-    [props.onUpload]
+    [onUpload]
   );
 
   return (
@@ -91,7 +90,6 @@ export function MainHeader(props: MainHeaderProps) {
       left={0}
       zIndex={999}
     >
-      {/* Bagian Kiri Header: Logo BPS dan BPS VISTA */}
       <Flex alignItems="center" flexShrink={0}>
         <Image
           src="/bps_logo.png"
@@ -115,7 +113,6 @@ export function MainHeader(props: MainHeaderProps) {
         </Heading>
       </Flex>
       <Spacer />
-      {/* Bagian Kanan Header: Icon Data, Nama File / Upload Info, Random Data Button, Dark Mode, Settings */}
       <Flex alignItems="center" flexGrow={0}>
         <IconButton
           icon={<FaRegFileAlt />}
@@ -143,7 +140,7 @@ export function MainHeader(props: MainHeaderProps) {
         <Button
           leftIcon={<FaRandom />}
           size="sm"
-          onClick={props.onRandomData}
+          onClick={onRandomData}
           ml={4}
           mr={4}
           variant="solid"
@@ -179,7 +176,7 @@ export function MainHeader(props: MainHeaderProps) {
           size={{ base: "md", md: "lg" }}
           ml={{ base: 2, md: 4 }}
           flexShrink={0}
-          onClick={props.onSettingsClick}
+          onClick={onSettingsClick}
         />
       </Flex>
     </Flex>

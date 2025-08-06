@@ -9,7 +9,7 @@ interface IGA {
   report: (...args: any[]) => void;
 }
 
-const gtag = (...args: any[]) => {
+const gtagFunction = (...args: any[]) => {
   if (typeof window === "undefined") return;
   if (typeof (window as any)?.gtag === "undefined") {
     (window as any).dataLayer = (window as any).dataLayer || [];
@@ -73,15 +73,17 @@ class GA implements IGA {
       );
     }
     this._loadGA(GA_ID, nonce, gtagUrl);
-    gtag("js", new Date());
-    gtag("config", GA_ID);
+    gtagFunction("js", new Date());
+    gtagFunction("config", GA_ID);
 
     this._isInitialized = true;
   };
   // https://developers.google.com/analytics/devguides/collection/ga4/events?client_type=gtag
   report = (...args: any[]) => {
-    gtag(...args);
+    gtagFunction(...args);
   };
 }
 
-export default new GA();
+const gtagInstance = new GA();
+
+export default gtagInstance;

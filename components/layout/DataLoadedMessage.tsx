@@ -23,7 +23,7 @@ export function DataLoadedMessage(props: DataLoadedMessageProps) {
         Data Anda Telah Diunggah!
       </Heading>
       <Text mb={6}>
-        Silakan klik tombol "Analyze" di bawah untuk melihat hasilnya. Anda juga dapat menambahkan konteks tambahan di sidebar sebelah kiri untuk hasil yang lebih akurat.
+        Silakan klik tombol &quot;Analyze&quot; di bawah untuk melihat hasilnya. Anda juga dapat menambahkan konteks tambahan di sidebar sebelah kiri untuk hasil yang lebih akurat.
       </Text>
       <Button colorScheme="green" onClick={onAnalyze}>
         Analyze

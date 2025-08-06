@@ -1,86 +1,46 @@
-// D:\BPS_Dashboard\ai-data-dashboard\components\viz\DropdownFilter.tsx
-
+import { Select, useColorMode } from "@chakra-ui/react";
 import React from "react";
-import { IFilter, IDataset } from "../../types";
-import {
-  FormControl,
-  FormLabel,
-  Select,
-  Box,
-  useColorMode,
-} from "@chakra-ui/react";
+import { ChangeEvent } from "react";
 
-interface DropdownFilterProps {
-  config: IFilter;
-  data: IDataset;
-  onChange?: (value: string) => void;
-  value?: string;
-}
-
-export function DropdownFilter(props: DropdownFilterProps) {
+export function DropdownFilter(props: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: string[];
+}) {
   const { colorMode } = useColorMode();
-
-  const values = React.useMemo(() => {
-    return props.data
-      .map((row) => row[props.config.column])
-      .filter((x, i, arr) => arr.indexOf(x) === i)
-      .filter((x) => x !== undefined && x !== null && x !== "")
-      .sort((a, b) => (a > b ? 1 : -1));
-  }, [props.config, props.data]);
+  const { onChange, options, value } = props;
 
   const handleChange = React.useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      props.onChange?.(e.target.value);
+    (e: ChangeEvent<HTMLSelectElement>) => {
+      onChange(e.target.value);
     },
-    [props.onChange]
+    [onChange]
   );
 
-  // styling adaptif berdasarkan colorMode
-  const labelColor = colorMode === "light" ? "gray.700" : "whiteAlpha.800";
-  const selectBg = colorMode === "light" ? "white" : "gray.700";
-  const selectColor = colorMode === "light" ? "gray.800" : "whiteAlpha.900";
-  const selectBorderColor = colorMode === "light" ? "gray.300" : "gray.600";
-  const hoverBorderColor = colorMode === "light" ? "gray.400" : "gray.500";
-  const focusBorderColor = colorMode === "light" ? "blue.500" : "blue.300";
-
   return (
-    <FormControl
-      id={`filter-${props.config.column}`}
-      width="180px"
-      minW="120px"
+    <Select
+      value={value}
+      onChange={handleChange}
+      placeholder={props.label}
+      size="sm"
+      bg={colorMode === "light" ? "white" : "gray.700"}
+      color={colorMode === "light" ? "gray.800" : "whiteAlpha.900"}
+      borderColor={colorMode === "light" ? "gray.300" : "gray.600"}
+      _hover={{
+        borderColor: colorMode === "light" ? "gray.400" : "gray.500",
+      }}
+      _focus={{
+        borderColor: colorMode === "light" ? "blue.500" : "blue.300",
+        boxShadow: "outline",
+      }}
+      borderRadius="md"
     >
-      <FormLabel fontSize="sm" mb={1} color={labelColor}>
-        {" "}
-        {props.config.title}
-      </FormLabel>
-      <Select
-        value={props.value || ""}
-        onChange={handleChange}
-        size="sm"
-        borderRadius="md"
-        borderColor={selectBorderColor}
-        _hover={{ borderColor: hoverBorderColor }}
-        _focus={{ borderColor: focusBorderColor, boxShadow: "outline" }}
-        bg={selectBg}
-        color={selectColor}
-      >
-        <option
-          key={"None"}
-          value=""
-          style={{ background: selectBg, color: selectColor }}
-        >
-          None
+      {options.map((option) => (
+        <option key={option} value={option}>
+          {option}
         </option>
-        {values.map((value) => (
-          <option
-            key={value}
-            value={value}
-            style={{ background: selectBg, color: selectColor }}
-          >
-            {value}
-          </option>
-        ))}
-      </Select>
-    </FormControl>
+      ))}
+    </Select>
   );
 }
