@@ -8,24 +8,20 @@ import {
   SimpleGrid,
   Wrap,
   WrapItem,
-  IconButton,
   useColorMode,
 } from "@chakra-ui/react";
-import { AddIcon, MinusIcon } from "@chakra-ui/icons";
 import { DropdownFilter } from "./DropdownFilter";
 import { PerformanceIndicator } from "./PerformanceIndicator";
-import { LineChart } from "./LineChart";
-import { BarChart } from "./BarChart";
-import { PieChart } from "./PieChart";
-import { TreemapChart } from "./TreemapChart";
+import { DashboardPanel } from "./DashboardPanel";
 import { shuffleArray } from "../../utils/parseFunc";
 
-export function Dashboard(
-  props: React.PropsWithChildren<{
-    dashboard: IDashboard;
-    data: IDataset;
-  }>
-) {
+interface DashboardProps {
+  dashboard: IDashboard;
+  data: IDataset;
+}
+
+// PERBAIKAN: Menggunakan React.forwardRef untuk menerima 'ref' dari parent
+export const Dashboard = React.forwardRef<HTMLDivElement, DashboardProps>((props, ref) => {
   const { colorMode } = useColorMode();
   const [filters, setFilters] = React.useState<Record<string, string>>({});
 
@@ -38,7 +34,6 @@ export function Dashboard(
   );
 
   React.useEffect(() => {
-    // Fitur Acak chart saat dashboard baru dimuat
     setShuffledCharts(shuffleArray([...props.dashboard.charts]));
   }, [props.dashboard.charts]);
 
@@ -47,17 +42,6 @@ export function Dashboard(
       setFilters((filters) => ({ ...filters, [column]: value }));
     };
   }, []);
-
-  const filteredData = React.useMemo(() => {
-    if (Object.keys(filters).length) {
-      return Object.keys(filters).reduce((result, key) => {
-        if (filters[key])
-          return result.filter((row) => row[key] == filters[key]);
-        return result;
-      }, props.data);
-    }
-    return props.data;
-  }, [filters, props.data]);
 
   const handleZoomChange = React.useCallback(
     (chartId: string, delta: number) => {
@@ -70,15 +54,33 @@ export function Dashboard(
     []
   );
 
-  const dashboardBoxShadow =
-    colorMode === "light" ? "md" : "0px 4px 6px rgba(255, 255, 255, 0.1)";
-  const cardBorderColor = colorMode === "light" ? "gray.200" : "gray.700";
+  const handleChartTypeChange = React.useCallback(
+    (chartId: string, newType: string) => {
+      setShuffledCharts((prevCharts) =>
+        prevCharts.map((chart) =>
+          chart.title === chartId ? { ...chart, chartType: newType } : chart
+        )
+      );
+    },
+    []
+  );
+
+  const filteredData = React.useMemo(() => {
+    if (Object.keys(filters).length) {
+      return Object.keys(filters).reduce((result, key) => {
+        if (filters[key])
+          return result.filter((row) => row[key] == filters[key]);
+        return result;
+      }, props.data);
+    }
+    return props.data;
+  }, [filters, props.data]);
 
   return (
-    <Box p={0}>
+    // PERBAIKAN: Menambahkan 'ref' ke elemen Box terluar
+    <Box p={0} ref={ref}>
       <Wrap spacing={4} mb={6} justify="center">
         {props.dashboard.filters.map((filter, index) => {
-          // PERBAIKAN: Menggunakan Array.from() untuk kompatibilitas yang lebih baik
           const options = Array.from(
             new Set(props.data.map((row) => row[filter.column]))
           ) as string[];
@@ -109,86 +111,20 @@ export function Dashboard(
           />
         ))}
       </SimpleGrid>
-      <SimpleGrid columns={{ base: 1 }} spacing={6} mb={6}>
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 1 }} spacing={6}>
         {shuffledCharts.map((chart, index) => (
-          <Flex
+          <DashboardPanel
             key={`${chart.title}-${index}`}
-            direction="column"
-            p={4}
-            borderRadius="lg"
-            boxShadow={dashboardBoxShadow}
-            bg={colorMode === "light" ? "whiteAlpha.900" : "gray.900"}
-            borderWidth="2px"
-            borderColor={cardBorderColor}
-            minH="400px"
-            maxH="450px"
-            overflowX={
-              chart.chartType === "barChart" ||
-              chart.chartType === "lineChart" ||
-              chart.chartType === "treemapChart"
-                ? "auto"
-                : "hidden"
-            }
-            overflowY="hidden"
-          >
-            <Flex justifyContent="space-between" alignItems="center" mb={4}>
-              <Heading
-                as="h3"
-                size="md"
-                textAlign="center"
-                flexGrow={1}
-                color={colorMode === "light" ? "gray.800" : "whiteAlpha.900"}
-              >
-                {chart.title}
-              </Heading>
-              {(chart.chartType === "barChart" ||
-                chart.chartType === "lineChart") && (
-                <Flex ml={2}>
-                  <IconButton
-                    size="xs"
-                    icon={<MinusIcon />}
-                    aria-label="Zoom Out"
-                    onClick={() => handleZoomChange(chart.title, -1)}
-                    isDisabled={chartZoomLevels[chart.title] <= -2}
-                    mr={1}
-                    colorScheme={colorMode === "light" ? "gray" : "whiteAlpha"}
-                  />
-                  <IconButton
-                    size="xs"
-                    icon={<AddIcon />}
-                    aria-label="Zoom In"
-                    onClick={() => handleZoomChange(chart.title, 1)}
-                    colorScheme={colorMode === "light" ? "gray" : "whiteAlpha"}
-                  />
-                </Flex>
-              )}
-            </Flex>
-
-            <Box flexGrow={1} position="relative">
-              {chart.chartType === "lineChart" && (
-                <LineChart
-                  config={chart}
-                  data={filteredData}
-                  zoomLevel={chartZoomLevels[chart.title]}
-                />
-              )}
-              {chart.chartType === "barChart" && (
-                <BarChart
-                  config={chart}
-                  data={filteredData}
-                  zoomLevel={chartZoomLevels[chart.title]}
-                />
-              )}
-              {chart.chartType === "pieChart" && (
-                <PieChart config={chart} data={filteredData} />
-              )}
-              {chart.chartType === "treemapChart" && (
-                <TreemapChart config={chart} data={filteredData} />
-              )}
-            </Box>
-          </Flex>
+            chart={chart}
+            data={filteredData}
+            zoomLevel={chartZoomLevels[chart.title] || 0}
+            onZoomChange={handleZoomChange}
+            onChartTypeChange={handleChartTypeChange}
+          />
         ))}
       </SimpleGrid>
     </Box>
   );
-}
+});
+
+export default Dashboard;

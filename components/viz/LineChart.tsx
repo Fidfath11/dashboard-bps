@@ -1,8 +1,5 @@
-// D:\BPS_Dashboard\ai-data-dashboard\components\viz\LineChart.tsx
-
 import React from "react";
 import { IChart, IDataset } from "../../types";
-
 import {
   CartesianGrid,
   Line,
@@ -22,11 +19,14 @@ interface LineChartProps {
   config: IChart;
   data: IDataset;
   zoomLevel?: number;
+  // PERBAIKAN: Menambahkan compactView ke interface
+  compactView?: boolean;
 }
 
 export function LineChart(props: React.PropsWithChildren<LineChartProps>) {
   const theme = useTheme();
   const { colorMode } = useColorMode();
+  const { compactView } = props;
 
   const CHART_COLORS = React.useMemo(
     () => [
@@ -58,15 +58,8 @@ export function LineChart(props: React.PropsWithChildren<LineChartProps>) {
     );
   }
 
-  const effectiveZoom = props.zoomLevel !== undefined ? props.zoomLevel : 0;
-  const baseLineSpacing = 60;
-  const zoomFactor = 1.2;
-  const currentLineSpacing = baseLineSpacing * Math.pow(zoomFactor, effectiveZoom);
-
-  const minChartWidth = Math.max(
-    500,
-    data.length * Math.max(10, currentLineSpacing) + 100
-  );
+  const minChartWidth = compactView ? '100%' : Math.max(500, data.length * 10);
+  const interval = compactView ? 'preserveStart' : 'preserveStartEnd';
 
   const axisColor = colorMode === "light" ? theme.colors.gray[600] : theme.colors.gray[300];
   const gridColor = colorMode === "light" ? theme.colors.gray[200] : theme.colors.gray[600];
@@ -82,7 +75,7 @@ export function LineChart(props: React.PropsWithChildren<LineChartProps>) {
             hide={false}
             stroke={axisColor}
             dataKey={"x"}
-            interval="preserveStartEnd"
+            interval={interval}
             angle={-45}
             textAnchor="end"
             height={60}

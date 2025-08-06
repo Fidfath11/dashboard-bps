@@ -1,5 +1,3 @@
-// D:\BPS_Dashboard\ai-data-dashboard\components\viz\BarChart.tsx
-
 import React from "react";
 import { IChart, IDataset } from "../../types";
 import {
@@ -21,11 +19,13 @@ interface BarChartProps {
   config: IChart;
   data: IDataset;
   zoomLevel?: number;
+  compactView?: boolean;
 }
 
 export function BarChart(props: React.PropsWithChildren<BarChartProps>) {
   const theme = useTheme();
   const { colorMode } = useColorMode();
+  const { compactView } = props;
 
   const CHART_COLORS = React.useMemo(
     () => [
@@ -56,20 +56,15 @@ export function BarChart(props: React.PropsWithChildren<BarChartProps>) {
       </Center>
     );
   }
-
-  const effectiveZoom = props.zoomLevel !== undefined ? props.zoomLevel : 0;
-  const baseBarSize = 30;
+  
   const zoomFactor = 1.2;
-  const barSize = baseBarSize * Math.pow(zoomFactor, effectiveZoom);
+  const barSize = compactView ? undefined : 30 * Math.pow(zoomFactor, props.zoomLevel || 0);
+  const barGap = compactView ? 2 : 10 * Math.pow(zoomFactor, props.zoomLevel || 0);
 
-  const baseBarGap = 10;
-  const barGap = baseBarGap * Math.pow(zoomFactor, effectiveZoom);
-
-  const minChartWidth = Math.max(
-    500,
-    data.length * (barSize + barGap)
-  );
-
+  const interval = compactView ? 'preserveStart' : (data.length > 15 ? 'preserveStartEnd' : 0);
+  
+  const minChartWidth = compactView ? '100%' : Math.max(500, data.length * (barSize || 30) + (barGap || 2));
+  
   const axisColor = colorMode === "light" ? theme.colors.gray[600] : theme.colors.gray[300];
   const gridColor = colorMode === "light" ? theme.colors.gray[200] : theme.colors.gray[600];
 
@@ -85,7 +80,7 @@ export function BarChart(props: React.PropsWithChildren<BarChartProps>) {
             hide={false}
             stroke={axisColor}
             dataKey={"x"}
-            interval={0}
+            interval={interval}
             angle={-45}
             textAnchor="end"
             height={60}
@@ -105,10 +100,11 @@ export function BarChart(props: React.PropsWithChildren<BarChartProps>) {
             stroke={gridColor}
             strokeDasharray="5 5"
           />
+          {/* PERBAIKAN: Menghindari properti 'barSize' saat compactView aktif */}
           <Bar
             dataKey={"y"}
             fill={CHART_COLORS[0]}
-            barSize={barSize}
+            {...(!compactView && { barSize: barSize })}
           />
         </RBarChart>
       </ResponsiveContainer>

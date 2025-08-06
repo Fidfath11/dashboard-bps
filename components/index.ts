@@ -13,6 +13,7 @@ export * from "./layout/Table";
 export * from "./layout/TextAreaInput";
 export * from "./layout/TextInput";
 export * from "./layout/UploadDatasetButton";
+export * from "./layout/DownloadSettingsModal";
 
 // Icons
 export * from "./icons";

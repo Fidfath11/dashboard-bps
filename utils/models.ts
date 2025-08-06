@@ -1,6 +1,7 @@
 import { GPT_MODEL } from "../openai/constants";
 import { promptTemplate, promptGPT35TurboTemplate } from "../openai/template";
 
+
 export const getPromptModel = (model: string) => {
   let promptModel = "";
   switch (model) {
@@ -9,9 +10,10 @@ export const getPromptModel = (model: string) => {
       break;
     default:
       promptModel = promptTemplate;
-  }
+  };
   return promptModel;
 };
+
 
 export const models = [
   { label: "GPT-3.5 Turbo", value: "gpt-3.5-turbo" },

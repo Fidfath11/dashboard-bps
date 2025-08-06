@@ -1,25 +1,22 @@
-// D:\BPS_Dashboard\ai-data-dashboard\pages\index.tsx
-
 import Head from "next/head";
 import React from "react";
-
 import {
   Flex,
   Box,
   Text,
   Button,
-  IconButton,
   useColorMode,
+  IconButton,
   Tooltip,
 } from "@chakra-ui/react";
-
-// Import ikon dari react-icons
-import { MdDashboard } from "react-icons/md";
-import { FaTable, FaCode } from "react-icons/fa";
-import { TbAnalyze } from "react-icons/tb";
-import { TbPrompt } from "react-icons/tb";
+import {
+  MdDashboard,
+  FaTable,
+  FaCode,
+  TbAnalyze,
+  TbPrompt,
+} from "../components/icons";
 import { DeleteIcon } from "@chakra-ui/icons";
-
 import {
   SettingsModal,
   Dashboard,
@@ -30,17 +27,18 @@ import {
   DataLoadedMessage,
   MissingApiKeyMessage,
   UploadDatasetButton,
+  DownloadSettingsModal, // MENAMBAHKAN IMPORT INI
 } from "../components";
-
 import { MainHeader } from "../components/layout/MainHeader";
 import { Loader } from "../components/layout/Loader";
 import { Table } from "../components/layout/Table";
-
 import { generateDashboard, generatePrompt } from "../openai";
 import { getRandomDataset } from "../openai/sample";
 import { IDashboard, IDataset, ISettings } from "../types";
 import { parseData } from "../utils/parseData";
 import gtag from "../lib/gtag";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 export default function Home() {
   const { colorMode } = useColorMode();
@@ -53,22 +51,23 @@ export default function Home() {
     model: "",
   });
   const [loading, setLoading] = React.useState(false);
-
   const [data, setData] = React.useState<IDataset>();
   const [userContext, setUserContext] = React.useState<string>("");
   const [fileName, setFileName] = React.useState<string | null>(null);
-
   const [currentSampleIndex, setCurrentSampleIndex] = React.useState(-1);
   const [dashboard, setDashboard] = React.useState<IDashboard | null>();
   const [showSettings, setShowSettings] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  
+  const dashboardRef = React.useRef<HTMLDivElement>(null);
+  const [downloading, setDownloading] = React.useState(false);
+  const [showDownloadModal, setShowDownloadModal] = React.useState(false); // MENAMBAHKAN STATE INI
 
   React.useEffect(() => {
     const config = localStorage.getItem("analyzer-settings");
     if (config) {
       setSettings(JSON.parse(config) as ISettings);
     }
-
     const { data, dashboard, context, index } = getRandomDataset(-1);
     setData(parseData(data));
     setDashboard(dashboard);
@@ -100,16 +99,13 @@ export default function Home() {
         .catch((err) => {
           setDashboard(null);
           setLoading(false);
-          setErrorMessage(
-            "Gagal menghasilkan dashboard. Coba periksa koneksi internet atau API key Anda."
-          );
+          setErrorMessage("Gagal menghasilkan dashboard. Coba periksa koneksi internet atau API key Anda.");
         });
     }
   }, [data, userContext, settings, setView]);
 
   const handleRandomDataset = React.useCallback(() => {
-    const { data, dashboard, context, index } =
-      getRandomDataset(currentSampleIndex);
+    const { data, dashboard, context, index } = getRandomDataset(currentSampleIndex);
     setData(parseData(data));
     setDashboard(dashboard);
     setUserContext(context);
@@ -144,10 +140,7 @@ export default function Home() {
 
   const handleDatasetChange = React.useCallback(
     (dataset: string | ArrayBuffer, uploadedFileName: string) => {
-      gtag.report("event", "upload_data", {
-        event_category: "settings",
-        event_label: "uploaded",
-      });
+      gtag.report("event", "upload_data", { event_category: "settings", event_label: "uploaded" });
       setData(parseData(dataset));
       setDashboard(null);
       setFileName(uploadedFileName);
@@ -161,18 +154,47 @@ export default function Home() {
     setUserContext("");
   }, []);
 
+  const openDownloadModal = React.useCallback(() => {
+    setShowDownloadModal(true);
+  }, []);
+
+  const closeDownloadModal = React.useCallback(() => {
+    setShowDownloadModal(false);
+  }, []);
+
+  const handleDownloadPDF = React.useCallback((settings: { size: string; margins: number }) => {
+    if (dashboardRef.current) {
+      setDownloading(true);
+      html2canvas(dashboardRef.current, { scale: 2 }).then((canvas) => {
+        const imgData = canvas.toDataURL("image/png");
+        // PERBAIKAN: Menggunakan ukuran dan margin dari pengaturan modal
+        const pdf = new jsPDF("p", "mm", settings.size);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+        const ratio = Math.min((pdfWidth - 2 * settings.margins) / imgWidth, (pdfHeight - 2 * settings.margins) / imgHeight);
+        const imgX = (pdfWidth - imgWidth * ratio) / 2;
+        const imgY = settings.margins;
+
+        pdf.addImage(imgData, "PNG", imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+        pdf.save(`dashboard_${new Date().toISOString().split('T')[0]}.pdf`);
+        setDownloading(false);
+      });
+    }
+  }, []);
+
   const sidebarWidth = "250px";
   const headerHeight = "50px";
 
-  // Konten yang akan dirender di panel kanan berdasarkan 'view' state
   let rightPanelContent: React.ReactNode = null;
-  if (loading) {
+  if (loading || downloading) {
     rightPanelContent = <Loader />;
   } else if (errorMessage) {
     rightPanelContent = <OpenAIErrorMessage>{errorMessage}</OpenAIErrorMessage>;
   } else if (view === "dashboard") {
     if (dashboard && data) {
-      rightPanelContent = <Dashboard dashboard={dashboard!} data={data!} />;
+      rightPanelContent = <Dashboard dashboard={dashboard!} data={data!} ref={dashboardRef} />;
     } else if (!settings.apikey && !data) {
       rightPanelContent = (
         <MissingApiKeyMessage
@@ -218,13 +240,12 @@ export default function Home() {
           data={data || []}
           onChange={(newData) => {
             setData(newData);
-            setDashboard(null); // Tambahkan ini agar dashboard direset saat tabel diubah
+            setDashboard(null);
           }}
         />
       </Box>
     );
   } else if (view === "prompt") {
-    // Hanya panggil generatePrompt jika data ada
     const generatedPromptValue = data
       ? generatePrompt(data!, userContext, settings.sampleRows, settings.model)
       : "Upload data dan masukkan konteks untuk melihat prompt yang dihasilkan.";
@@ -273,15 +294,16 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      {/* MainHeader sudah fixed di posisinya */}
       <MainHeader
         onSettingsClick={handleShowSettings}
         onRandomData={handleRandomDataset}
-        fileName={fileName} // Meneruskan fileName ke MainHeader
-        onUpload={handleDatasetChange} // Meneruskan fungsi upload ke MainHeader
+        fileName={fileName}
+        onUpload={handleDatasetChange}
+        onDownloadPDF={openDownloadModal}
+        isDownloading={downloading}
+        isDashboardView={view === "dashboard" && dashboard !== null}
       />
 
-      {/* Konten utama di bawah header: Sidebar + Panel Kanan */}
       <Flex
         direction="row"
         flexGrow={1}
@@ -289,7 +311,6 @@ export default function Home() {
         height="calc(100vh - 50px)"
         overflow="hidden"
       >
-        {/* Panel Kiri (Sidebar) */}
         <Box
           width="250px"
           bg={colorMode === "light" ? "white" : "gray.800"}
@@ -303,9 +324,7 @@ export default function Home() {
           overflowY="hidden"
           flexShrink={0}
         >
-          {/* Menu Navigasi */}
           <Box mb={6} flexShrink={0} pt={4}>
-            {/* Menggunakan Tooltip untuk informasi tambahan pada ikon */}
             <Tooltip label="View Dashboard" placement="right">
               <Button
                 variant="ghost"
@@ -419,7 +438,6 @@ export default function Home() {
               </Button>
             </Tooltip>
           </Box>
-          {/* Area untuk TextAreaInput dan Analyze Button (Selalu di Sidebar) */}
           <Box flexGrow={0} display="flex" flexDirection="column" pt={0}>
             <TextAreaInput
               label={
@@ -470,8 +488,8 @@ export default function Home() {
             </Button>
           </Box>
         </Box>
-        {/* Panel Kanan (Konten Utama Dashboard) */}
         <Box
+          ref={dashboardRef}
           flex="1"
           p={6}
           borderRadius="lg"
@@ -486,13 +504,20 @@ export default function Home() {
           {rightPanelContent}
         </Box>
       </Flex>
-
-      {loading && <Loader />}
+      {loading || downloading && <Loader />}
       {showSettings && (
         <SettingsModal
           value={settings}
           onChange={handleSettingsChange}
           onCancel={handleCloseSettings}
+        />
+      )}
+      {showDownloadModal && (
+        <DownloadSettingsModal
+          isOpen={showDownloadModal}
+          onClose={closeDownloadModal}
+          onDownload={handleDownloadPDF}
+          dashboardContentRef={dashboardRef}
         />
       )}
     </>

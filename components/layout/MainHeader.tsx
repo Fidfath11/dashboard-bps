@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  Box,
   Flex,
   Heading,
   Text,
@@ -8,21 +9,25 @@ import {
   Image,
   Button,
   useColorMode,
+  Tooltip,
 } from "@chakra-ui/react";
-
 import { FaRegFileAlt, FaRandom } from "react-icons/fa";
 import { IoSettings } from "react-icons/io5";
 import { SunIcon, MoonIcon } from "@chakra-ui/icons";
+import { LuFileDown } from "react-icons/lu";
 
 interface MainHeaderProps {
   onSettingsClick: () => void;
   onRandomData: () => void;
   fileName?: string | null;
   onUpload: (dataset: string | ArrayBuffer, uploadedFileName: string) => void;
+  onDownloadPDF?: () => void;
+  isDownloading?: boolean;
+  isDashboardView?: boolean;
 }
 
 export function MainHeader(props: MainHeaderProps) {
-  const { onUpload, onRandomData, onSettingsClick } = props;
+  const { onUpload, onRandomData, onSettingsClick, onDownloadPDF, isDownloading, isDashboardView } = props;
   const { colorMode, toggleColorMode } = useColorMode();
   const fileNameDisplay = props.fileName
     ? props.fileName
@@ -39,14 +44,9 @@ export function MainHeader(props: MainHeaderProps) {
       if (e.target.files && e.target.files.length > 0) {
         const inputFile = e.target.files[0];
         const reader = new FileReader();
-
         const isCSV = inputFile.name.endsWith(".csv");
-        const isXLSX =
-          inputFile.name.endsWith(".xlsx") ||
-          inputFile.type ===
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        const isXLSX = inputFile.name.endsWith(".xlsx") || inputFile.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
         const fileName = inputFile.name;
-
         reader.onload = function (event) {
           if (isCSV) {
             const text = event?.target?.result as string;
@@ -60,7 +60,6 @@ export function MainHeader(props: MainHeaderProps) {
             }
           }
         };
-
         if (isCSV) {
           reader.readAsText(inputFile);
         } else if (isXLSX) {
@@ -102,11 +101,7 @@ export function MainHeader(props: MainHeaderProps) {
           as="h1"
           size={{ base: "sm", md: "md" }}
           mr={{ base: 2, md: 4 }}
-          className={
-            colorMode === "light"
-              ? "bps-vista-gradient-light"
-              : "bps-vista-gradient-dark"
-          }
+          className={colorMode === "light" ? "bps-vista-gradient-light" : "bps-vista-gradient-dark"}
           fontFamily="heading"
         >
           BPS VISTA
@@ -114,6 +109,20 @@ export function MainHeader(props: MainHeaderProps) {
       </Flex>
       <Spacer />
       <Flex alignItems="center" flexGrow={0}>
+        {isDashboardView && (
+          <Tooltip label="Download PDF" placement="bottom">
+            <IconButton
+              icon={<LuFileDown />}
+              aria-label="Download Dashboard as PDF"
+              variant="ghost"
+              colorScheme={colorMode === "light" ? "gray" : "white"}
+              size="md"
+              mr={2}
+              onClick={onDownloadPDF}
+              isLoading={isDownloading}
+            />
+          </Tooltip>
+        )}
         <IconButton
           icon={<FaRegFileAlt />}
           aria-label="Upload Data"
