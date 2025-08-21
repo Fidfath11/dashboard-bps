@@ -11,9 +11,8 @@ const initPinecone = async () => {
   if (pinecone) {
     return pinecone;
   }
-  // PERBAIKAN: Inisialisasi Pinecone client sesuai versi terbaru, properti 'environment' tidak lagi ada di sini.
   pinecone = new Pinecone({
-    apiKey: process.env.NEXT_PUBLIC_PINECONE_API_KEY!,
+    apiKey: process.env.PINECONE_API_KEY!,
   });
   return pinecone;
 };
@@ -31,9 +30,15 @@ const createEmbedding = async (
     method: "POST",
     body: JSON.stringify({
       model: "text-embedding-ada-002",
-      input: text,
+      input: text.replace(/\n/g, " "), // Menghapus newline yang bisa menyebabkan masalah
     }),
   });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error("OpenAI API Error:", errorBody);
+    throw new Error(`Failed to create embedding. Status: ${response.status}. Body: ${errorBody}`);
+  }
 
   const responseJson = await response.json();
   const { data } = responseJson;
@@ -41,16 +46,13 @@ const createEmbedding = async (
   if (data && data.length > 0 && data[0].embedding) {
     return data[0].embedding;
   }
-  // Menambahkan log error yang lebih baik
-  console.error("Failed to create embedding. API Response:", responseJson);
-  throw new Error("Failed to create embedding.");
+
+  console.error("Failed to create embedding. Invalid API Response:", responseJson);
+  throw new Error("Failed to create embedding from API response.");
 };
 
 /**
  * Memecah dataset menjadi potongan-potongan kecil (chunks)
- * @param dataset - Dataset yang akan dipecah
- * @param chunkSize - Jumlah baris per chunk
- * @returns Array dari string, di mana setiap string adalah representasi dari chunk.
  */
 const chunkDataset = (dataset: IDataset, chunkSize: number = 20): string[] => {
   const chunks: string[] = [];
@@ -63,28 +65,21 @@ const chunkDataset = (dataset: IDataset, chunkSize: number = 20): string[] => {
 
 /**
  * Fungsi untuk mengindeks data ke Vector Database (Pinecone)
- * Ini akan dipanggil setiap kali dataset baru diunggah.
  */
 export const indexDataset = async (
   dataset: IDataset,
-  datasetId: string, // ID unik untuk dataset, bisa nama file
+  datasetId: string,
   apiKey: string
 ) => {
   try {
     const pinecone = await initPinecone();
-    const indexName = process.env.NEXT_PUBLIC_PINECONE_INDEX_NAME || 'dashboard-bps';
+    const indexName = process.env.PINECONE_INDEX_NAME!;
     const index = pinecone.index(indexName);
-
-    // Pinecone namespaces are now part of operations, not index selection
     const namespace = datasetId;
-
-    // Hapus vektor lama jika ada untuk namespace ini untuk menghindari duplikasi (opsional, tergantung use case)
-    // await index.namespace(namespace).deleteAll();
 
     const chunks = chunkDataset(dataset);
     
-    // Proses chunk dalam batch untuk efisiensi
-    for (let i = 0; i < chunks.length; i += 50) { // Batch size 50
+    for (let i = 0; i < chunks.length; i += 50) {
         const batchChunks = chunks.slice(i, i + 50);
         const embeddings = await Promise.all(
             batchChunks.map(chunk => createEmbedding(chunk, apiKey))
@@ -102,16 +97,13 @@ export const indexDataset = async (
     console.log(`Dataset "${datasetId}" successfully indexed in Pinecone.`);
   } catch (error) {
     console.error("Error indexing dataset:", error);
+    // Melempar kembali error agar bisa ditangkap oleh API route
+    throw error;
   }
 };
 
 /**
  * Fungsi untuk mencari dan mengambil konteks yang relevan dari Pinecone
- * @param query - Prompt dari pengguna
- * @param datasetId - ID unik dari dataset yang sedang aktif
- * @param apiKey - OpenAI API Key
- * @param topK - Jumlah konteks teratas yang ingin diambil
- * @returns String berisi konteks yang paling relevan
  */
 export const retrieveContext = async (
   query: string,
@@ -121,7 +113,7 @@ export const retrieveContext = async (
 ): Promise<string> => {
   try {
     const pinecone = await initPinecone();
-    const indexName = process.env.NEXT_PUBLIC_PINECONE_INDEX_NAME || 'dashboard-bps';
+    const indexName = process.env.PINECONE_INDEX_NAME!;
     const index = pinecone.index(indexName);
     const namespace = datasetId;
 
@@ -141,6 +133,6 @@ export const retrieveContext = async (
     return "No relevant context found.";
   } catch (error) {
     console.error("Error retrieving context:", error);
-    return "Error retrieving context.";
+    throw error;
   }
 };
