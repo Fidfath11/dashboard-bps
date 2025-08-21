@@ -1,5 +1,3 @@
-// D:\BPS_Dashboard\ai-data-dashboard\types.ts
-
 export interface ISettings {
   apikey: string;
   sampleRows: number;
@@ -27,9 +25,8 @@ export interface IChart {
   chartType: string;
   javascriptFunction: string;
   agregate?: IAgregate;
-  // PERBAIKAN: Menambahkan properti yang hilang
-  xAxis: string;
-  yAxis: string;
+  xAxis?: string;
+  yAxis?: string;
 }
 
 export interface IDashboard {
@@ -39,7 +36,7 @@ export interface IDashboard {
 }
 
 export type IDatasetRecord = {
-  [key: string]: string | number; // Diubah ke string | number untuk fleksibilitas
+  [key: string]: string | number;
 };
 
 export type IDataset = IDatasetRecord[];
