@@ -13,7 +13,7 @@ import { runFunc } from "../../utils/parseFunc";
 import { ErrorBoundary } from "../layout/ErrorBoundary";
 import { formatNumber } from "../../utils/numberFormatter";
 import { IChartData } from "../../utils/parseFunc";
-import { Box, useTheme, Text, Center, useColorMode } from '@chakra-ui/react';
+import { useTheme, Text, Center, useColorMode } from '@chakra-ui/react';
 
 interface BarChartProps {
   config: IChart;
@@ -56,15 +56,15 @@ export function BarChart(props: React.PropsWithChildren<BarChartProps>) {
       </Center>
     );
   }
-  
+ 
   const zoomFactor = 1.2;
   const barSize = compactView ? undefined : 30 * Math.pow(zoomFactor, props.zoomLevel || 0);
   const barGap = compactView ? 2 : 10 * Math.pow(zoomFactor, props.zoomLevel || 0);
 
   const interval = compactView ? 'preserveStart' : (data.length > 15 ? 'preserveStartEnd' : 0);
-  
+ 
   const minChartWidth = compactView ? '100%' : Math.max(500, data.length * (barSize || 30) + (barGap || 2));
-  
+ 
   const axisColor = colorMode === "light" ? theme.colors.gray[600] : theme.colors.gray[300];
   const gridColor = colorMode === "light" ? theme.colors.gray[200] : theme.colors.gray[600];
 
@@ -100,7 +100,6 @@ export function BarChart(props: React.PropsWithChildren<BarChartProps>) {
             stroke={gridColor}
             strokeDasharray="5 5"
           />
-          {/* PERBAIKAN: Menghindari properti 'barSize' saat compactView aktif */}
           <Bar
             dataKey={"y"}
             fill={CHART_COLORS[0]}

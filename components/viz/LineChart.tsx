@@ -19,7 +19,6 @@ interface LineChartProps {
   config: IChart;
   data: IDataset;
   zoomLevel?: number;
-  // PERBAIKAN: Menambahkan compactView ke interface
   compactView?: boolean;
 }
 
@@ -58,7 +57,7 @@ export function LineChart(props: React.PropsWithChildren<LineChartProps>) {
     );
   }
 
-  const minChartWidth = compactView ? '100%' : Math.max(500, data.length * 10);
+  const minChartWidth = compactView ? '100%' : Math.max(500, data.length * 30 * Math.pow(1.2, props.zoomLevel || 0));
   const interval = compactView ? 'preserveStart' : 'preserveStartEnd';
 
   const axisColor = colorMode === "light" ? theme.colors.gray[600] : theme.colors.gray[300];

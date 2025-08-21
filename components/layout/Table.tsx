@@ -1,7 +1,4 @@
-// D:\BPS_Dashboard\ai-data-dashboard\components\layout\Table.tsx
-
 import React from "react";
-
 import {
   Box,
   Table as ChakraTable,
@@ -16,7 +13,6 @@ import {
   useColorMode,
 } from "@chakra-ui/react";
 import { ArrowUpIcon, ArrowDownIcon } from "@chakra-ui/icons";
-
 import {
   ColumnDef,
   useReactTable,
@@ -27,9 +23,8 @@ import {
   getSortedRowModel,
   SortingState,
 } from "@tanstack/react-table";
-import { useVirtual } from "react-virtual";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import isEqual from "lodash.isequal";
-
 import { IDataset, IDatasetRecord } from "../../types";
 
 declare module "@tanstack/react-table" {
@@ -46,24 +41,17 @@ function useCell(
 ) {
   const initialValue = getValue();
   const [value, setValue] = React.useState(initialValue);
-
   const onBlur = () => {
     if (table.options.meta) {
       table.options.meta.updateData(index, id, value);
     }
   };
-
   React.useEffect(() => {
     if (!isEqual(initialValue, value)) {
       setValue(initialValue);
     }
   }, [initialValue, value]);
-
-  return {
-    value,
-    setValue,
-    onBlur,
-  };
+  return { value, setValue, onBlur };
 }
 
 function EditableCell({
@@ -74,8 +62,6 @@ function EditableCell({
 }: any) {
   const { colorMode } = useColorMode();
   const { value, setValue, onBlur } = useCell(getValue, index, id, table);
-
-  // Styling adaptif untuk input di sel
   const inputBg = colorMode === "light" ? "white" : "gray.700";
   const inputColor = colorMode === "light" ? "gray.800" : "whiteAlpha.900";
   const inputBorderColor = colorMode === "light" ? "gray.300" : "gray.600";
@@ -85,7 +71,7 @@ function EditableCell({
   return (
     <Input
       value={value as string}
-      onChange={(e) => setValue(e.target.value)}
+      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value)}
       onBlur={onBlur}
       variant="unstyled"
       size="sm"
@@ -111,13 +97,10 @@ interface TableProps {
 export function Table(props: TableProps) {
   const { colorMode } = useColorMode();
   const tableContainerRef = React.useRef<HTMLDivElement>(null);
-
   const [sorting, setSorting] = React.useState<SortingState>([]);
-
   const columns: ColumnDef<IDatasetRecord>[] = React.useMemo(() => {
     const row = props.data?.[0];
     const baseColumns: ColumnDef<IDatasetRecord>[] = [];
-
     if (row) {
       Object.keys(row).forEach((name) => {
         let minSize = 80;
@@ -129,7 +112,6 @@ export function Table(props: TableProps) {
         } else if (name.toLowerCase().includes("kode")) {
           minSize = 60;
         }
-
         baseColumns.push({
           header: name,
           accessorKey: name,
@@ -138,7 +120,6 @@ export function Table(props: TableProps) {
         });
       });
     }
-
     return baseColumns;
   }, [props.data]);
 
@@ -171,7 +152,6 @@ export function Table(props: TableProps) {
             }
             return row;
           }) || [];
-
         if (props.onChange && !isEqual(newData, props.data))
           props.onChange?.(newData);
       },
@@ -179,12 +159,16 @@ export function Table(props: TableProps) {
   });
 
   const { rows } = table.getRowModel();
-  const rowVirtualizer = useVirtual({
-    parentRef: tableContainerRef,
-    size: rows.length,
+
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 34,
     overscan: 10,
   });
-  const { virtualItems: virtualRows, totalSize } = rowVirtualizer;
+
+  const virtualRows = rowVirtualizer.getVirtualItems();
+  const totalSize = rowVirtualizer.getTotalSize();
 
   const paddingTop = virtualRows.length > 0 ? virtualRows?.[0]?.start || 0 : 0;
   const paddingBottom =
@@ -192,7 +176,6 @@ export function Table(props: TableProps) {
       ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0)
       : 0;
 
-  //  warna adaptif untuk tabel
   const tableBg = colorMode === "light" ? "white" : "gray.800";
   const tableBorderColor = colorMode === "light" ? "gray.200" : "gray.700";
   const theadBg = colorMode === "light" ? "gray.50" : "gray.700";
@@ -217,8 +200,6 @@ export function Table(props: TableProps) {
     >
       <ChakraTable variant="simple" size="sm" width="full">
         <Thead bg={theadBg} position="sticky" top={0} zIndex={1}>
-          {" "}
-          {/* Warna bg thead adaptif */}
           {table.getHeaderGroups().map((headerGroup) => (
             <Tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
@@ -270,8 +251,6 @@ export function Table(props: TableProps) {
             const row = rows[virtualRow.index];
             return (
               <Tr key={row.id} _hover={{ bg: rowHoverBg }} color={textColor}>
-                {" "}
-                {/* Warna hover dan teks baris adaptif */}
                 {row.getVisibleCells().map((cell) => {
                   return (
                     <Td
