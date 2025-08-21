@@ -1,9 +1,6 @@
-// D:\BPS_Dashboard\ai-data-dashboard\pages\_app.tsx
 import "../styles/globals.css";
 import type { AppProps } from "next/app";
 import gtag from "../lib/gtag";
-
-// Import Chakra UI dan tema
 import { ChakraProvider } from "@chakra-ui/react"; 
 import theme from "../theme/theme"; 
 import Head from "next/head";
@@ -18,7 +15,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <link
           rel="preconnect"
           href="https://fonts.gstatic.com"
-          crossOrigin="true"
+          // PERBAIKAN: Properti crossOrigin="true" dihapus
         />
         {/* Mengubah font menjadi Inter sesuai dengan desain Chakra UI default, bisa disesuaikan */}
         <link
