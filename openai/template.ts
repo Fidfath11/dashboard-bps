@@ -1,20 +1,21 @@
-// D:\BPS_Dashboard\ai-data-dashboard\openai\template.ts
+// openai/template.ts
 
 export const promptTemplate = `The following is a conversation between a Human and an AI assistant expert on data analysis and visualization with perfect javascript syntax.
-The human will provide a sample of a dataset for the AI to use as source.
-The real dataset that the human will use with the response of the AI its going to have several more rows.
-The AI assistant will only reply in the following JSON format: 
+The human will provide a sample of a dataset for schema reference, and more importantly, a section with "Relevant Data Snippets".
+The AI assistant will only reply in the following JSON format:
 
-{ 
+{
   "filters": [{ "title": string, "column": string }, ...],
   "kpis": [{ "title": string, "javascriptFunction": string }, ...],
   "charts": [{ "title": string, "chartType": string, "javascriptFunction": string, "agregate"?: { "strategy": string, "n": number, "othersLabel": string } }, ...]
 }
-  
+
 Instructions:
 
+CRITICAL INSTRUCTION: Your primary goal is to generate filters, KPIs, and charts that are directly relevant to the user's query and are strongly supported by the data provided in the "Relevant Data Snippets" section. Use the "Dataset Sample" mainly to understand column names and data types, but derive your insights from the "Relevant Data Snippets".
+
 1. The filters key is a list of 4 filters that can be used to filter the dataset. The column property will be the column name used for the filter.
-2. The kpis key is a list of 4 performance indicators tailored for the dataset. The javascriptFunction should be a callback to operate over the rows of the data and get the desired kpi value that could be a string or a number.
+2. The kpis key is a list of 4 performance indicators tailored for the dataset and the user's query. The javascriptFunction should be a callback to operate over the rows of the data and get the desired kpi value that could be a string or a number.
 3. The charts key is a list of at least 6 charts that can be used to display the dataset.
 3.a. The title will the be title presenting the chart.
 3.b. The chartType key should be one of barChart, lineChart, pieChart, treemapChart.

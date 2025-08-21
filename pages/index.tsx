@@ -1,3 +1,5 @@
+// pages/index.tsx
+
 import Head from "next/head";
 import React from "react";
 import {
@@ -8,6 +10,7 @@ import {
   useColorMode,
   IconButton,
   Tooltip,
+  useToast, // PERUBAHAN: Impor useToast untuk notifikasi
 } from "@chakra-ui/react";
 import {
   MdDashboard,
@@ -27,12 +30,15 @@ import {
   DataLoadedMessage,
   MissingApiKeyMessage,
   UploadDatasetButton,
-  DownloadSettingsModal, // MENAMBAHKAN IMPORT INI
+  DownloadSettingsModal,
 } from "../components";
 import { MainHeader } from "../components/layout/MainHeader";
 import { Loader } from "../components/layout/Loader";
 import { Table } from "../components/layout/Table";
-import { generateDashboard, generatePrompt } from "../openai";
+// PERUBAHAN: Hapus impor 'generateDashboard' dan 'prepareDatasetForRag', sisakan 'generatePrompt'
+// import { generatePrompt } from "../openai";
+// GANTI DENGAN BARIS INI
+import { generatePrompt } from "../openai/client";
 import { getRandomDataset } from "../openai/sample";
 import { IDashboard, IDataset, ISettings } from "../types";
 import { parseData } from "../utils/parseData";
@@ -42,6 +48,7 @@ import jsPDF from "jspdf";
 
 export default function Home() {
   const { colorMode } = useColorMode();
+  const toast = useToast(); // PERUBAHAN: Inisialisasi toast
   const [view, setView] = React.useState<
     "prompt" | "code" | "dashboard" | "table"
   >("dashboard");
@@ -58,10 +65,10 @@ export default function Home() {
   const [dashboard, setDashboard] = React.useState<IDashboard | null>();
   const [showSettings, setShowSettings] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-  
+
   const dashboardRef = React.useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = React.useState(false);
-  const [showDownloadModal, setShowDownloadModal] = React.useState(false); // MENAMBAHKAN STATE INI
+  const [showDownloadModal, setShowDownloadModal] = React.useState(false);
 
   React.useEffect(() => {
     const config = localStorage.getItem("analyzer-settings");
@@ -69,51 +76,94 @@ export default function Home() {
       setSettings(JSON.parse(config) as ISettings);
     }
     const { data, dashboard, context, index } = getRandomDataset(-1);
-    setData(parseData(data));
+    const parsedData = parseData(data);
+    setData(parsedData);
     setDashboard(dashboard);
     setUserContext(context);
     setCurrentSampleIndex(index);
     setView("dashboard");
+    setFileName("sample_data.csv");
   }, []);
 
-  const handleAnalyze = React.useCallback(() => {
+  // PERUBAHAN: Mengubah handleAnalyze untuk memanggil API Route
+  const handleAnalyze = React.useCallback(async () => {
     if (!settings.apikey) {
       setShowSettings(true);
-    } else if (data) {
+      return;
+    }
+    if (data && fileName) {
       setLoading(true);
       setErrorMessage(null);
-      generateDashboard(
-        data!,
-        userContext,
-        settings.sampleRows,
-        settings.apikey,
-        settings.model
-      )
-        .then((response) => {
-          setDashboard(response.dashboard);
-          setLoading(false);
-          if (response.dashboard) {
-            setView("dashboard");
-          }
-        })
-        .catch((err) => {
-          setDashboard(null);
-          setLoading(false);
-          setErrorMessage("Gagal menghasilkan dashboard. Coba periksa koneksi internet atau API key Anda.");
+      try {
+        const response = await fetch('/api/dashboard', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${settings.apikey}`
+          },
+          body: JSON.stringify({
+            action: 'analyze',
+            dataset: data,
+            userContext: userContext,
+            fileName: fileName,
+            model: settings.model,
+          }),
         });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Gagal menghasilkan dashboard');
+        }
+
+        const result = await response.json();
+        setDashboard(result.dashboard);
+        setView("dashboard");
+      } catch (err: any) {
+        setDashboard(null);
+        setErrorMessage(err.message);
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [data, userContext, settings, setView]);
+  }, [data, userContext, settings, fileName]);
+
 
   const handleRandomDataset = React.useCallback(() => {
     const { data, dashboard, context, index } = getRandomDataset(currentSampleIndex);
-    setData(parseData(data));
+    const parsedData = parseData(data);
+    setData(parsedData);
     setDashboard(dashboard);
     setUserContext(context);
     setCurrentSampleIndex(index);
-    setFileName(null);
+    const randomFileName = `sample_data_${index}.csv`;
+    setFileName(randomFileName);
     setErrorMessage(null);
     setView("dashboard");
-  }, [currentSampleIndex, setView]);
+    
+    // PERUBAHAN: Indeks data random via API route
+    if (settings.apikey) {
+      setLoading(true);
+      fetch('/api/dashboard', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${settings.apikey}`
+        },
+        body: JSON.stringify({
+          action: 'index',
+          dataset: parsedData,
+          fileName: randomFileName
+        })
+      }).then(res => {
+        if (!res.ok) throw new Error("Gagal mengindeks data random.");
+        toast({ title: "Data contoh siap.", status: "success", duration: 3000, isClosable: true });
+      }).catch(err => {
+        setErrorMessage(err.message);
+      }).finally(() => {
+        setLoading(false);
+      });
+    }
+  }, [currentSampleIndex, settings.apikey, toast]);
 
   const handleClear = React.useCallback(() => {
     setData(undefined);
@@ -122,7 +172,7 @@ export default function Home() {
     setFileName(null);
     setErrorMessage(null);
     setView("dashboard");
-  }, [setView]);
+  }, []);
 
   const handleSettingsChange = React.useCallback((settings: ISettings) => {
     localStorage.setItem("analyzer-settings", JSON.stringify(settings));
@@ -130,44 +180,75 @@ export default function Home() {
     setShowSettings(false);
   }, []);
 
-  const handleShowSettings = React.useCallback(() => {
-    setShowSettings(true);
-  }, []);
+  const handleShowSettings = React.useCallback(() => setShowSettings(true), []);
+  const handleCloseSettings = React.useCallback(() => setShowSettings(false), []);
 
-  const handleCloseSettings = React.useCallback(() => {
-    setShowSettings(false);
-  }, []);
-
+  // PERUBAHAN: Mengubah handleDatasetChange untuk memanggil API Route
   const handleDatasetChange = React.useCallback(
-    (dataset: string | ArrayBuffer, uploadedFileName: string) => {
+    async (dataset: string | ArrayBuffer, uploadedFileName: string) => {
       gtag.report("event", "upload_data", { event_category: "settings", event_label: "uploaded" });
-      setData(parseData(dataset));
+      const parsedData = parseData(dataset);
+      setData(parsedData);
       setDashboard(null);
       setFileName(uploadedFileName);
       setErrorMessage(null);
       setView("table");
+
+      if (settings.apikey && parsedData.length > 0) {
+        setLoading(true);
+        try {
+          const response = await fetch('/api/dashboard', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${settings.apikey}`
+            },
+            body: JSON.stringify({
+              action: 'index',
+              dataset: parsedData,
+              fileName: uploadedFileName
+            })
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Gagal mengindeks data');
+          }
+          
+          toast({
+            title: "Data siap dianalisis.",
+            description: `"${uploadedFileName}" berhasil diindeks.`,
+            status: "success",
+            duration: 5000,
+            isClosable: true,
+          });
+
+        } catch (err: any) {
+          setErrorMessage(err.message);
+          toast({
+            title: "Gagal Mengindeks Data.",
+            description: err.message,
+            status: "error",
+            duration: 9000,
+            isClosable: true,
+          });
+        } finally {
+          setLoading(false);
+        }
+      }
     },
-    [setView]
+    [settings.apikey, toast]
   );
 
-  const handleClearContext = React.useCallback(() => {
-    setUserContext("");
-  }, []);
-
-  const openDownloadModal = React.useCallback(() => {
-    setShowDownloadModal(true);
-  }, []);
-
-  const closeDownloadModal = React.useCallback(() => {
-    setShowDownloadModal(false);
-  }, []);
+  const handleClearContext = React.useCallback(() => setUserContext(""), []);
+  const openDownloadModal = React.useCallback(() => setShowDownloadModal(true), []);
+  const closeDownloadModal = React.useCallback(() => setShowDownloadModal(false), []);
 
   const handleDownloadPDF = React.useCallback((settings: { size: string; margins: number }) => {
     if (dashboardRef.current) {
       setDownloading(true);
       html2canvas(dashboardRef.current, { scale: 2 }).then((canvas) => {
         const imgData = canvas.toDataURL("image/png");
-        // PERBAIKAN: Menggunakan ukuran dan margin dari pengaturan modal
         const pdf = new jsPDF("p", "mm", settings.size);
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
@@ -335,20 +416,6 @@ export default function Home() {
                 leftIcon={<MdDashboard />}
                 isActive={view === "dashboard"}
                 _active={{ bg: "blue.500", color: "white" }}
-                _hover={{
-                  bg:
-                    view === "dashboard"
-                      ? "blue.500"
-                      : colorMode === "light"
-                      ? "gray.100"
-                      : "whiteAlpha.200",
-                  color:
-                    view === "dashboard"
-                      ? "white"
-                      : colorMode === "light"
-                      ? "gray.800"
-                      : "whiteAlpha.800",
-                }}
               >
                 Dashboard
               </Button>
@@ -363,20 +430,6 @@ export default function Home() {
                 leftIcon={<FaTable />}
                 isActive={view === "table"}
                 _active={{ bg: "blue.500", color: "white" }}
-                _hover={{
-                  bg:
-                    view === "table"
-                      ? "blue.500"
-                      : colorMode === "light"
-                      ? "gray.100"
-                      : "whiteAlpha.200",
-                  color:
-                    view === "table"
-                      ? "white"
-                      : colorMode === "light"
-                      ? "gray.800"
-                      : "whiteAlpha.800",
-                }}
               >
                 Table
               </Button>
@@ -391,20 +444,6 @@ export default function Home() {
                 leftIcon={<TbPrompt />}
                 isActive={view === "prompt"}
                 _active={{ bg: "blue.500", color: "white" }}
-                _hover={{
-                  bg:
-                    view === "prompt"
-                      ? "blue.500"
-                      : colorMode === "light"
-                      ? "gray.100"
-                      : "whiteAlpha.200",
-                  color:
-                    view === "prompt"
-                      ? "white"
-                      : colorMode === "light"
-                      ? "gray.800"
-                      : "whiteAlpha.800",
-                }}
               >
                 Prompt
               </Button>
@@ -419,20 +458,6 @@ export default function Home() {
                 leftIcon={<FaCode />}
                 isActive={view === "code"}
                 _active={{ bg: "blue.500", color: "white" }}
-                _hover={{
-                  bg:
-                    view === "code"
-                      ? "blue.500"
-                      : colorMode === "light"
-                      ? "gray.100"
-                      : "whiteAlpha.200",
-                  color:
-                    view === "code"
-                      ? "white"
-                      : colorMode === "light"
-                      ? "gray.800"
-                      : "whiteAlpha.800",
-                }}
               >
                 Code
               </Button>
@@ -453,10 +478,6 @@ export default function Home() {
                     icon={<DeleteIcon />}
                     aria-label="Clear Context"
                     variant="ghost"
-                    colorScheme={colorMode === "light" ? "gray" : "white"}
-                    _hover={{
-                      bg: colorMode === "light" ? "gray.100" : "whiteAlpha.200",
-                    }}
                     size="sm"
                     onClick={handleClearContext}
                   />
@@ -470,7 +491,7 @@ export default function Home() {
               placeholder="Provide additional context about your data here..."
             />
             <Button
-              colorScheme={colorMode === "light" ? "green" : "teal"}
+              colorScheme="green"
               rightIcon={
                 settings?.apikey && dashboard && data ? <TbAnalyze /> : undefined
               }
@@ -504,7 +525,7 @@ export default function Home() {
           {rightPanelContent}
         </Box>
       </Flex>
-      {loading || downloading && <Loader />}
+      {(loading || downloading) && <Loader />}
       {showSettings && (
         <SettingsModal
           value={settings}
