@@ -10,7 +10,7 @@ import {
   useColorMode,
   IconButton,
   Tooltip,
-  useToast, // PERUBAHAN: Impor useToast untuk notifikasi
+  useToast,
 } from "@chakra-ui/react";
 import {
   MdDashboard,
@@ -35,9 +35,6 @@ import {
 import { MainHeader } from "../components/layout/MainHeader";
 import { Loader } from "../components/layout/Loader";
 import { Table } from "../components/layout/Table";
-// PERUBAHAN: Hapus impor 'generateDashboard' dan 'prepareDatasetForRag', sisakan 'generatePrompt'
-// import { generatePrompt } from "../openai";
-// GANTI DENGAN BARIS INI
 import { generatePrompt } from "../openai/client";
 import { getRandomDataset } from "../openai/sample";
 import { IDashboard, IDataset, ISettings } from "../types";
@@ -48,12 +45,12 @@ import jsPDF from "jspdf";
 
 export default function Home() {
   const { colorMode } = useColorMode();
-  const toast = useToast(); // PERUBAHAN: Inisialisasi toast
+  const toast = useToast();
   const [view, setView] = React.useState<
     "prompt" | "code" | "dashboard" | "table"
   >("dashboard");
   const [settings, setSettings] = React.useState<ISettings>({
-    apikey: "",
+    apikey: "", // Kunci API sekarang hanya sebagai penanda di sisi klien
     sampleRows: 10,
     model: "",
   });
@@ -85,7 +82,6 @@ export default function Home() {
     setFileName("sample_data.csv");
   }, []);
 
-  // PERUBAHAN: Mengubah handleAnalyze untuk memanggil API Route
   const handleAnalyze = React.useCallback(async () => {
     if (!settings.apikey) {
       setShowSettings(true);
@@ -99,7 +95,6 @@ export default function Home() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${settings.apikey}`
           },
           body: JSON.stringify({
             action: 'analyze',
@@ -127,7 +122,6 @@ export default function Home() {
     }
   }, [data, userContext, settings, fileName]);
 
-
   const handleRandomDataset = React.useCallback(() => {
     const { data, dashboard, context, index } = getRandomDataset(currentSampleIndex);
     const parsedData = parseData(data);
@@ -140,14 +134,12 @@ export default function Home() {
     setErrorMessage(null);
     setView("dashboard");
     
-    // PERUBAHAN: Indeks data random via API route
     if (settings.apikey) {
       setLoading(true);
       fetch('/api/dashboard', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${settings.apikey}`
         },
         body: JSON.stringify({
           action: 'index',
@@ -183,7 +175,6 @@ export default function Home() {
   const handleShowSettings = React.useCallback(() => setShowSettings(true), []);
   const handleCloseSettings = React.useCallback(() => setShowSettings(false), []);
 
-  // PERUBAHAN: Mengubah handleDatasetChange untuk memanggil API Route
   const handleDatasetChange = React.useCallback(
     async (dataset: string | ArrayBuffer, uploadedFileName: string) => {
       gtag.report("event", "upload_data", { event_category: "settings", event_label: "uploaded" });
@@ -201,7 +192,6 @@ export default function Home() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${settings.apikey}`
             },
             body: JSON.stringify({
               action: 'index',

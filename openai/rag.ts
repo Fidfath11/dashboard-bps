@@ -1,7 +1,7 @@
 // openai/rag.ts
 
 import { Pinecone } from "@pinecone-database/pinecone";
-import { IDataset, IDatasetRecord } from "../types";
+import { IDataset } from "../types";
 import { stringifyData } from "../utils/parseData";
 
 let pinecone: Pinecone | null = null;
@@ -11,9 +11,9 @@ const initPinecone = async () => {
   if (pinecone) {
     return pinecone;
   }
-  // PERBAIKAN: Inisialisasi Pinecone client sesuai versi terbaru, properti 'environment' tidak lagi ada di sini.
+  // PERBAIKAN: Gunakan variabel lingkungan sisi server yang aman.
   pinecone = new Pinecone({
-    apiKey: process.env.NEXT_PUBLIC_PINECONE_API_KEY!,
+    apiKey: process.env.PINECONE_API_KEY!,
   });
   return pinecone;
 };
@@ -41,16 +41,12 @@ const createEmbedding = async (
   if (data && data.length > 0 && data[0].embedding) {
     return data[0].embedding;
   }
-  // Menambahkan log error yang lebih baik
   console.error("Failed to create embedding. API Response:", responseJson);
   throw new Error("Failed to create embedding.");
 };
 
 /**
  * Memecah dataset menjadi potongan-potongan kecil (chunks)
- * @param dataset - Dataset yang akan dipecah
- * @param chunkSize - Jumlah baris per chunk
- * @returns Array dari string, di mana setiap string adalah representasi dari chunk.
  */
 const chunkDataset = (dataset: IDataset, chunkSize: number = 20): string[] => {
   const chunks: string[] = [];
@@ -63,7 +59,6 @@ const chunkDataset = (dataset: IDataset, chunkSize: number = 20): string[] => {
 
 /**
  * Fungsi untuk mengindeks data ke Vector Database (Pinecone)
- * Ini akan dipanggil setiap kali dataset baru diunggah.
  */
 export const indexDataset = async (
   dataset: IDataset,
@@ -72,14 +67,10 @@ export const indexDataset = async (
 ) => {
   try {
     const pinecone = await initPinecone();
-    const indexName = process.env.NEXT_PUBLIC_PINECONE_INDEX_NAME || 'dashboard-bps';
+    // PERBAIKAN: Gunakan variabel lingkungan sisi server
+    const indexName = process.env.PINECONE_INDEX_NAME || 'dashboard-bps';
     const index = pinecone.index(indexName);
-
-    // Pinecone namespaces are now part of operations, not index selection
     const namespace = datasetId;
-
-    // Hapus vektor lama jika ada untuk namespace ini untuk menghindari duplikasi (opsional, tergantung use case)
-    // await index.namespace(namespace).deleteAll();
 
     const chunks = chunkDataset(dataset);
     
@@ -102,16 +93,13 @@ export const indexDataset = async (
     console.log(`Dataset "${datasetId}" successfully indexed in Pinecone.`);
   } catch (error) {
     console.error("Error indexing dataset:", error);
+    // Berikan pesan error yang lebih spesifik
+    throw new Error(`Failed to index dataset in Pinecone. Reason: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
 /**
  * Fungsi untuk mencari dan mengambil konteks yang relevan dari Pinecone
- * @param query - Prompt dari pengguna
- * @param datasetId - ID unik dari dataset yang sedang aktif
- * @param apiKey - OpenAI API Key
- * @param topK - Jumlah konteks teratas yang ingin diambil
- * @returns String berisi konteks yang paling relevan
  */
 export const retrieveContext = async (
   query: string,
@@ -121,7 +109,7 @@ export const retrieveContext = async (
 ): Promise<string> => {
   try {
     const pinecone = await initPinecone();
-    const indexName = process.env.NEXT_PUBLIC_PINECONE_INDEX_NAME || 'dashboard-bps';
+    const indexName = process.env.PINECONE_INDEX_NAME || 'dashboard-bps';
     const index = pinecone.index(indexName);
     const namespace = datasetId;
 

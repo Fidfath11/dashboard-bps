@@ -1,12 +1,11 @@
 // openai/client.ts
-// BERKAS BARU: Berisi fungsi yang AMAN diimpor oleh komponen sisi klien.
 
 import { IDataset } from "../types";
 import { stringifyData } from "../utils/parseData";
 import { getPrompt } from "./completions";
 import { getPromptModel } from "../utils/models";
 
-// Fungsi ini aman karena tidak memiliki dependensi ke 'rag.ts' atau pustaka server lainnya.
+// Fungsi ini aman untuk dijalankan di client-side
 export function generatePrompt(
   dataset: IDataset,
   userContext: string,
@@ -25,10 +24,10 @@ export function generatePrompt(
 
   More information about the dataset: 
 
-            ${userContext}`
+          ${userContext}`
           : ""
       }
-          `,
+        `,
     },
   ]);
 }

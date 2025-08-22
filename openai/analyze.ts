@@ -19,34 +19,6 @@ export async function prepareDatasetForRag(
   await indexDataset(dataset, fileName, apiKey);
 }
 
-// Fungsi ini tidak banyak berubah, hanya untuk melihat prompt jika diperlukan
-export function generatePrompt(
-  dataset: IDataset,
-  userContext: string,
-  sampleRows: number,
-  model: string
-) {
-  return getPrompt(getPromptModel(model), [
-    {
-      question: `
-  This is the dataset:
-
-  ${stringifyData(dataset.slice(0, sampleRows), ",")}${
-        userContext
-          ? `
-
-
-  More information about the dataset: 
-
-            ${userContext}`
-          : ""
-      }
-          `,
-    },
-  ]);
-}
-
-
 /**
  * Fungsi generateDashboard yang telah dikembangkan dengan alur RAG.
  */
@@ -76,12 +48,16 @@ export async function generateDashboard(
   My specific query or goal is: 
   "${userContext}"
   `;
+  
+  // Dapatkan konteks prompt dari template
+  const promptContext = getPromptModel(model);
 
   // Tahap 3: Generate - Kirim prompt yang sudah diperkaya ke LLM
+  // PERBAIKAN: Menambahkan argumen ketiga { apikey, model } yang sebelumnya hilang.
   const response = await queryCompletionsChat(
-    getPromptModel(model),
-    [{ question: augmentedQuestion }],
-    { apikey, model }
+    promptContext, // Argumen pertama adalah konteks/template prompt
+    [{ question: augmentedQuestion }], // Argumen kedua adalah interaksi
+    { apikey, model } // Argumen ketiga adalah options
   );
 
   return {
